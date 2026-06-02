@@ -22,6 +22,11 @@ export async function GET() {
     } catch (e: unknown) {
       info.supabase_reachable = false
       info.supabase_error = e instanceof Error ? e.message : String(e)
+      if (e instanceof Error && (e as NodeJS.ErrnoException).cause) {
+        const cause = (e as NodeJS.ErrnoException).cause as Error
+        info.supabase_error_cause = cause?.message ?? String(cause)
+        info.supabase_error_code = (cause as NodeJS.ErrnoException)?.code
+      }
     }
   }
 
