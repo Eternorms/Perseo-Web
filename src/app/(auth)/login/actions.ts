@@ -13,7 +13,7 @@ export async function login(formData: FormData) {
   })
 
   if (error) {
-    redirect('/login?error=credenciais+invalidas')
+    redirect(`/login?error=${encodeURIComponent(error.message)}`)
   }
 
   const { data: { user } } = await supabase.auth.getUser()
