@@ -2,6 +2,13 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function updateSession(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Rotas públicas — bypass completo, sem instanciar Supabase
+  const publicRoutes = ['/login', '/onboarding', '/lp', '/api/webhooks', '/api/health']
+  const isPublic = publicRoutes.some(r => pathname.startsWith(r))
+  if (isPublic) return NextResponse.next({ request })
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -25,17 +32,11 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { pathname } = request.nextUrl
-
-  // Rotas públicas — sem auth
-  const publicRoutes = ['/login', '/onboarding', '/lp', '/api/webhooks']
-  const isPublic = publicRoutes.some(r => pathname.startsWith(r))
-
-  if (!user && !isPublic) {
+  if (!user) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (user && pathname === '/login') {
+  if (pathname === '/login') {
     return NextResponse.redirect(new URL('/agency/dashboard', request.url))
   }
 
