@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { type Client, type Lead, type Appointment } from '@/types'
+import { type Client, type Lead, type Appointment, type AgentAction } from '@/types'
 import EditClientForm from './edit-client-form'
 
 const leadStatusColor: Record<string, string> = {
@@ -38,15 +38,29 @@ const apptStatusLabel: Record<string, string> = {
   no_show: 'Faltou',
 }
 
+const actionTypeLabel: Record<string, string> = {
+  send_message: 'Mensagem enviada',
+  cancel_appointment: 'Agendamento cancelado',
+  reschedule: 'Reagendamento',
+  qualify_lead: 'Lead qualificado',
+}
+
+const actionStatusColor: Record<string, string> = {
+  pending: 'bg-amber-500/15 text-amber-400',
+  done: 'bg-emerald-500/15 text-emerald-400',
+  failed: 'bg-red-500/15 text-red-400',
+}
+
 interface Props {
   client: Client
   leads: Lead[]
   appointments: Appointment[]
+  agentActions: AgentAction[]
 }
 
-const tabs = ['Visão Geral', 'Leads', 'Agendamentos']
+const tabs = ['Visão Geral', 'Leads', 'Agendamentos', 'Agente']
 
-export default function ClientTabs({ client, leads, appointments }: Props) {
+export default function ClientTabs({ client, leads, appointments, agentActions }: Props) {
   const [active, setActive] = useState(0)
 
   return (
@@ -165,6 +179,69 @@ export default function ClientTabs({ client, leads, appointments }: Props) {
           )}
         </div>
       )}
+
+      {active === 3 && (
+        <div className="space-y-4">
+          {/* Stats do agente */}
+          <div className="grid grid-cols-3 gap-3">
+            <AgentStat label="Total de ações" value={agentActions.length} />
+            <AgentStat
+              label="Taxa de sucesso"
+              value={agentActions.length === 0 ? '—' : `${Math.round((agentActions.filter(a => a.status === 'done').length / agentActions.length) * 100)}%`}
+              highlight
+            />
+            <AgentStat
+              label="Status atual"
+              value={client.agent_active ? 'Ativo' : 'Inativo'}
+              highlight={client.agent_active}
+            />
+          </div>
+
+          {/* Histórico */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
+            {agentActions.length === 0 ? (
+              <div className="p-8 text-center text-sm text-neutral-600">Nenhuma ação registrada ainda.</div>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-neutral-800">
+                    <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Ação</th>
+                    <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Alvo</th>
+                    <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Status</th>
+                    <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Data</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {agentActions.map((a, i) => (
+                    <tr key={a.id} className={i < agentActions.length - 1 ? 'border-b border-neutral-800/50' : ''}>
+                      <td className="px-4 py-3 text-neutral-300 text-xs">{actionTypeLabel[a.action_type] ?? a.action_type}</td>
+                      <td className="px-4 py-3 text-neutral-500 text-xs">{a.target_phone ?? '—'}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${actionStatusColor[a.status] ?? ''}`}>
+                          {a.status === 'done' ? 'Concluído' : a.status === 'failed' ? 'Falhou' : 'Pendente'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-neutral-500 text-xs">
+                        {new Date(a.created_at).toLocaleDateString('pt-BR')}{' '}
+                        {new Date(a.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AgentStat({ label, value, highlight }: { label: string; value: string | number; highlight?: boolean }) {
+  return (
+    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4">
+      <p className="text-xs text-neutral-500 uppercase tracking-wide">{label}</p>
+      <p className={`text-xl font-semibold mt-1 ${highlight ? 'text-emerald-400' : 'text-white'}`}>{value}</p>
     </div>
   )
 }

@@ -106,6 +106,31 @@ export interface AgentAction {
   completed_at: string | null
 }
 
+export type TaskStatus = 'backlog' | 'todo' | 'in_progress' | 'review' | 'done'
+export type TaskPriority = 'low' | 'medium' | 'high'
+
+export interface Task {
+  id: string
+  title: string
+  description: string | null
+  status: TaskStatus
+  priority: TaskPriority
+  client_id: string | null
+  assigned_to: string | null
+  created_by: string
+  due_date: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface AssistantMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  metadata: Record<string, unknown> | null
+  created_at: string
+}
+
 export interface JobQueue {
   id: string
   job_type: string

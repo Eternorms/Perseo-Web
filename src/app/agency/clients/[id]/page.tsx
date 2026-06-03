@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { type Client, type Lead, type Appointment } from '@/types'
+import { type Client, type Lead, type Appointment, type AgentAction } from '@/types'
 import ClientTabs from './client-tabs'
 import InviteClientModal from './invite-client-modal'
 
@@ -22,10 +22,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const { id } = await params
   const supabase = await createClient()
 
-  const [{ data: client }, { data: leads }, { data: appointments }] = await Promise.all([
+  const [{ data: client }, { data: leads }, { data: appointments }, { data: agentActions }] = await Promise.all([
     supabase.from('clients').select('*').eq('id', id).single(),
     supabase.from('leads').select('*').eq('client_id', id).order('created_at', { ascending: false }),
     supabase.from('appointments').select('*').eq('client_id', id).order('scheduled_at', { ascending: false }),
+    supabase.from('agent_actions').select('*').eq('client_id', id).order('created_at', { ascending: false }).limit(50),
   ])
 
   if (!client) notFound()
@@ -77,6 +78,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         client={c}
         leads={(leads as Lead[]) ?? []}
         appointments={(appointments as Appointment[]) ?? []}
+        agentActions={(agentActions as AgentAction[]) ?? []}
       />
     </div>
   )
