@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export interface UpdateClientData {
   business_name: string
@@ -39,5 +40,32 @@ export async function updateClientAction(id: string, data: UpdateClientData) {
 
   revalidatePath(`/agency/clients/${id}`)
   revalidatePath('/agency/clients')
+  return { error: null }
+}
+
+export async function inviteClientAccessAction(clientId: string, data: { name: string; email: string }) {
+  const supabase = await createClient()
+  const { data: me } = await supabase.from('app_users').select('user_type').single()
+  if (me?.user_type !== 'agency_owner') return { error: 'Sem permissão.' }
+
+  const admin = createAdminClient()
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://perseo-web-production.up.railway.app'
+
+  const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(data.email, {
+    redirectTo: `${siteUrl}/auth/callback?next=/onboarding`,
+    data: { name: data.name },
+  })
+  if (inviteError) return { error: inviteError.message }
+
+  const { error: insertError } = await admin.from('app_users').insert({
+    supabase_uid: invited.user.id,
+    user_type: 'client_owner',
+    name: data.name,
+    email: data.email,
+    client_id: clientId,
+  })
+  if (insertError) return { error: insertError.message }
+
+  revalidatePath(`/agency/clients/${clientId}`)
   return { error: null }
 }

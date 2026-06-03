@@ -29,7 +29,7 @@ export async function login(formData: FormData) {
   // Busca o tipo do usuário para redirecionar corretamente
   const { data: appUser } = await supabase
     .from('app_users')
-    .select('user_type')
+    .select('user_type, client_id')
     .eq('supabase_uid', user.id)
     .single()
 
@@ -37,8 +37,15 @@ export async function login(formData: FormData) {
 
   if (appUser?.user_type?.startsWith('agency')) {
     redirect('/agency/dashboard')
+  } else if (appUser?.client_id) {
+    const { data: client } = await supabase
+      .from('clients')
+      .select('onboarding_step')
+      .eq('id', appUser.client_id)
+      .single()
+    redirect(client && client.onboarding_step >= 7 ? '/client/dashboard' : '/onboarding')
   } else {
-    redirect('/client/dashboard')
+    redirect('/onboarding')
   }
 }
 

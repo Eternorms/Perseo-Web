@@ -5,7 +5,7 @@ export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Rotas públicas — bypass completo, sem instanciar Supabase
-  const publicRoutes = ['/login', '/onboarding', '/lp', '/api/webhooks', '/api/health', '/api/debug']
+  const publicRoutes = ['/login', '/auth/callback', '/lp', '/api/webhooks', '/api/health']
   const isPublic = publicRoutes.some(r => pathname.startsWith(r))
   if (isPublic) return NextResponse.next({ request })
 

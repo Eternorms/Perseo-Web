@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { type Client, type Lead, type Appointment } from '@/types'
 import ClientTabs from './client-tabs'
+import InviteClientModal from './invite-client-modal'
 
 const statusColor: Record<string, string> = {
   active: 'bg-emerald-500/15 text-emerald-400',
@@ -51,9 +52,12 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
           </div>
         </div>
 
-        <div className="text-right space-y-1">
-          <p className="text-xs text-neutral-500 uppercase tracking-wide">Plano</p>
-          <p className="text-sm text-white font-medium capitalize">{c.plan}</p>
+        <div className="flex flex-col items-end gap-2">
+          <div className="text-right space-y-1">
+            <p className="text-xs text-neutral-500 uppercase tracking-wide">Plano</p>
+            <p className="text-sm text-white font-medium capitalize">{c.plan}</p>
+          </div>
+          <InviteClientModal clientId={c.id} />
         </div>
       </div>
 
