@@ -13,7 +13,14 @@ export async function login(formData: FormData) {
   })
 
   if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`)
+    const msg =
+      error.message.toLowerCase().includes('invalid login') ||
+      error.message.toLowerCase().includes('invalid credentials')
+        ? 'Email ou senha incorretos.'
+        : error.message.toLowerCase().includes('email not confirmed')
+          ? 'Confirme seu email antes de entrar.'
+          : 'Erro ao fazer login. Tente novamente.'
+    redirect(`/login?error=${encodeURIComponent(msg)}`)
   }
 
   const { data: { user } } = await supabase.auth.getUser()

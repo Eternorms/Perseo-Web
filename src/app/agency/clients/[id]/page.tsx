@@ -1,0 +1,88 @@
+import { notFound } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { type Client, type Lead, type Appointment } from '@/types'
+import ClientTabs from './client-tabs'
+
+const statusColor: Record<string, string> = {
+  active: 'bg-emerald-500/15 text-emerald-400',
+  onboarding: 'bg-amber-500/15 text-amber-400',
+  paused: 'bg-neutral-500/15 text-neutral-400',
+  churned: 'bg-red-500/15 text-red-400',
+}
+
+const statusLabel: Record<string, string> = {
+  active: 'Ativo',
+  onboarding: 'Onboarding',
+  paused: 'Pausado',
+  churned: 'Churn',
+}
+
+export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const supabase = await createClient()
+
+  const [{ data: client }, { data: leads }, { data: appointments }] = await Promise.all([
+    supabase.from('clients').select('*').eq('id', id).single(),
+    supabase.from('leads').select('*').eq('client_id', id).order('created_at', { ascending: false }),
+    supabase.from('appointments').select('*').eq('client_id', id).order('scheduled_at', { ascending: false }),
+  ])
+
+  if (!client) notFound()
+
+  const c = client as Client
+
+  return (
+    <div className="p-8 space-y-6">
+      {/* Header */}
+      <div className="flex items-start justify-between">
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <a href="/agency/clients" className="text-xs text-neutral-500 hover:text-white transition-colors">
+              ← Clientes
+            </a>
+          </div>
+          <h1 className="text-lg font-semibold text-white">{c.business_name}</h1>
+          <div className="flex items-center gap-3">
+            <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[c.status] ?? ''}`}>
+              {statusLabel[c.status] ?? c.status}
+            </span>
+            <span className="text-xs text-neutral-500">{c.contact_email ?? ''}</span>
+            {c.contact_phone && <span className="text-xs text-neutral-500">{c.contact_phone}</span>}
+          </div>
+        </div>
+
+        <div className="text-right space-y-1">
+          <p className="text-xs text-neutral-500 uppercase tracking-wide">Plano</p>
+          <p className="text-sm text-white font-medium capitalize">{c.plan}</p>
+        </div>
+      </div>
+
+      {/* Stats rápidas */}
+      <div className="grid grid-cols-3 gap-3">
+        <Stat label="Leads" value={leads?.length ?? 0} />
+        <Stat label="Agendamentos" value={appointments?.length ?? 0} />
+        <Stat
+          label="Agente"
+          value={c.agent_active ? 'Ativo' : 'Inativo'}
+          highlight={c.agent_active}
+        />
+      </div>
+
+      {/* Abas */}
+      <ClientTabs
+        client={c}
+        leads={(leads as Lead[]) ?? []}
+        appointments={(appointments as Appointment[]) ?? []}
+      />
+    </div>
+  )
+}
+
+function Stat({ label, value, highlight }: { label: string; value: string | number; highlight?: boolean }) {
+  return (
+    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4">
+      <p className="text-xs text-neutral-500 uppercase tracking-wide">{label}</p>
+      <p className={`text-xl font-semibold mt-1 ${highlight ? 'text-emerald-400' : 'text-white'}`}>{value}</p>
+    </div>
+  )
+}
