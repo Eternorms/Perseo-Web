@@ -2,22 +2,26 @@
 
 import { usePathname } from 'next/navigation'
 
-const navItems = [
-  { href: '/agency/dashboard', label: 'Dashboard' },
-  { href: '/agency/clients', label: 'Clientes' },
-  { href: '/agency/kanban', label: 'Kanban' },
-  { href: '/agency/inbox', label: 'Inbox' },
-  { href: '/agency/team', label: 'Equipe' },
-]
-
 interface Props {
   name: string
-  userType: string
+  isOwner: boolean
   logout: () => Promise<void>
 }
 
-export default function AgencySidebar({ name, logout }: Props) {
+const baseItems = [
+  { href: '/client/dashboard', label: 'Dashboard' },
+  { href: '/client/appointments', label: 'Agendamentos' },
+  { href: '/client/messages', label: 'Mensagens' },
+]
+
+const ownerItems = [
+  { href: '/client/reports', label: 'Relatórios' },
+  { href: '/client/settings', label: 'Configurações' },
+]
+
+export default function ClientSidebar({ name, isOwner, logout }: Props) {
   const pathname = usePathname()
+  const items = isOwner ? [...baseItems, ...ownerItems] : baseItems
 
   return (
     <aside className="w-56 border-r border-neutral-800 flex flex-col py-6 px-4 gap-1">
@@ -26,8 +30,8 @@ export default function AgencySidebar({ name, logout }: Props) {
         <p className="text-xs text-neutral-500 mt-0.5 truncate">{name}</p>
       </div>
       <nav className="flex-1 flex flex-col gap-0.5">
-        {navItems.map((item) => {
-          const active = pathname === item.href || (item.href !== '/agency/dashboard' && pathname.startsWith(item.href))
+        {items.map(item => {
+          const active = pathname === item.href || (item.href !== '/client/dashboard' && pathname.startsWith(item.href))
           return (
             <a
               key={item.href}

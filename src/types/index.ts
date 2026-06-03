@@ -123,13 +123,6 @@ export interface Task {
   updated_at: string
 }
 
-export interface AssistantMessage {
-  id: string
-  role: 'user' | 'assistant'
-  content: string
-  metadata: Record<string, unknown> | null
-  created_at: string
-}
 
 export interface JobQueue {
   id: string
