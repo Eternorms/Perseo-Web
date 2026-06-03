@@ -6,6 +6,7 @@ const navItems = [
   { href: '/agency/dashboard', label: 'Dashboard' },
   { href: '/agency/clients', label: 'Clientes' },
   { href: '/agency/kanban', label: 'Kanban' },
+  { href: '/agency/research', label: 'Criativos' },
   { href: '/agency/inbox', label: 'Inbox' },
   { href: '/agency/team', label: 'Equipe' },
 ]
