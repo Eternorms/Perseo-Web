@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import { Copy, ExternalLink } from "lucide-react";
 import { api } from "@/lib/api";
 import { Client, CreativeApproval, ChatMessage } from "@/lib/types";
 
@@ -79,31 +80,37 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
           <p className="text-zinc-400 text-sm">{client.name} · {client.niche}</p>
         </div>
         {portalUrl && (
-          <div className="text-right">
-            <p className="text-xs text-zinc-500 mb-1">Link do cliente</p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-zinc-500 hidden sm:block max-w-xs truncate">{portalUrl}</p>
+            <button
+              onClick={() => navigator.clipboard.writeText(portalUrl)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 hover:text-white text-xs rounded-md transition-colors"
+              aria-label="Copiar link do portal do cliente"
+            >
+              <Copy size={12} aria-hidden="true" />
+              Copiar link
+            </button>
             <a
               href={portalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-violet-400 hover:underline break-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 hover:text-white text-xs rounded-md transition-colors"
+              aria-label="Abrir portal do cliente em nova aba"
             >
-              {portalUrl}
+              <ExternalLink size={12} aria-hidden="true" />
+              Abrir portal
             </a>
-            <button
-              onClick={() => navigator.clipboard.writeText(portalUrl)}
-              className="ml-2 text-xs text-zinc-500 hover:text-zinc-300"
-            >
-              Copiar
-            </button>
           </div>
         )}
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-zinc-800 pb-0">
+      <div role="tablist" aria-label="Seções do cliente" className="flex gap-2 border-b border-zinc-800 pb-0">
         {(["overview", "criativos", "chat"] as const).map((t) => (
           <button
             key={t}
+            role="tab"
+            aria-selected={tab === t}
             onClick={() => setTab(t)}
             className={`px-4 py-2 text-sm -mb-px border-b-2 transition-colors ${
               tab === t
@@ -118,7 +125,7 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
 
       {/* Overview */}
       {tab === "overview" && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div role="tabpanel" className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: "Budget mensal", value: client.monthly_budget ? `R$ ${client.monthly_budget.toLocaleString("pt-BR")}` : "—" },
             { label: "ROAS atual",    value: client.current_roas ? `${client.current_roas.toFixed(2)}x` : "—" },
@@ -135,7 +142,7 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
 
       {/* Criativos */}
       {tab === "criativos" && (
-        <div className="space-y-3">
+        <div role="tabpanel" className="space-y-3">
           <div className="flex justify-end">
             <button
               onClick={() => setShowNewCreative((v) => !v)}
@@ -233,7 +240,7 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
 
       {/* Chat */}
       {tab === "chat" && (
-        <div className="flex flex-col gap-3" style={{ height: "60vh" }}>
+        <div role="tabpanel" className="flex flex-col gap-3" style={{ height: "60vh" }}>
           <div className="flex-1 overflow-y-auto space-y-2 bg-zinc-900 border border-zinc-800 rounded-lg p-4">
             {messages.length === 0 ? (
               <p className="text-zinc-600 text-sm text-center mt-8">Sem mensagens ainda</p>

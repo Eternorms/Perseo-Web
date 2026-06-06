@@ -6,11 +6,19 @@ import { api } from "@/lib/api";
 import { Client } from "@/lib/types";
 
 const STAGE_LABEL: Record<string, string> = {
-  active: "Ativo",
+  active:   "Ativo",
   prospect: "Prospect",
-  at_risk: "Em risco",
-  paused: "Pausado",
-  churned: "Churn",
+  at_risk:  "Em risco",
+  paused:   "Pausado",
+  churned:  "Churn",
+};
+
+const STAGE_BORDER: Record<string, string> = {
+  active:   "border-l-emerald-500",
+  prospect: "border-l-blue-500",
+  at_risk:  "border-l-amber-500",
+  paused:   "border-l-zinc-500",
+  churned:  "border-l-red-500",
 };
 
 function NewClientModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
@@ -58,7 +66,7 @@ function NewClientModal({ onClose, onCreated }: { onClose: () => void; onCreated
       <div className="bg-zinc-900 border border-zinc-700 rounded-xl w-full max-w-md">
         <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-white">Novo Cliente</h2>
-          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300 text-xl leading-none">×</button>
+          <button onClick={onClose} aria-label="Fechar" className="text-zinc-500 hover:text-zinc-300 text-xl leading-none">×</button>
         </div>
         <form onSubmit={submit} className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -167,7 +175,7 @@ export default function ClientsPage() {
             <Link
               key={c.id}
               href={`/agency/clients/${c.id}`}
-              className="bg-zinc-900 border border-zinc-800 rounded-lg p-5 hover:border-zinc-600 transition-colors"
+              className={`bg-zinc-900 border border-zinc-800 border-l-2 ${STAGE_BORDER[c.stage] ?? "border-l-zinc-700"} rounded-lg p-5 hover:border-zinc-600 transition-colors`}
             >
               <div className="flex items-start justify-between mb-3">
                 <div>

@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { AlertTriangle, Clock } from "lucide-react";
 import { api } from "@/lib/api";
-import { Client } from "@/lib/types";
+import { Client, CreativeApproval } from "@/lib/types";
 
 const STAGE_LABEL: Record<string, string> = {
-  active: "Ativo",
+  active:   "Ativo",
   prospect: "Prospect",
-  at_risk: "Em risco",
-  paused: "Pausado",
-  churned: "Churn",
+  at_risk:  "Em risco",
+  paused:   "Pausado",
+  churned:  "Churn",
 };
 
 const STAGE_COLOR: Record<string, string> = {
@@ -27,11 +28,15 @@ function fmt(n: number, prefix = "") {
 
 export default function DashboardPage() {
   const [clients, setClients] = useState<Client[]>([]);
+  const [approvals, setApprovals] = useState<CreativeApproval[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get<Client[]>("/api/agency/clients")
-      .then(setClients)
+    Promise.all([
+      api.get<Client[]>("/api/agency/clients"),
+      api.get<CreativeApproval[]>("/api/agency/approvals?status=pending"),
+    ])
+      .then(([c, a]) => { setClients(c); setApprovals(a); })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -40,11 +45,13 @@ export default function DashboardPage() {
   const mrr = clients
     .filter((c) => c.stage !== "churned")
     .reduce((s, c) => s + (c.plan_value ?? 0), 0);
+  const atRisk = clients.filter((c) => c.stage === "at_risk");
 
   const kpis = [
-    { label: "Clientes ativos",  value: String(active.length) },
-    { label: "MRR",              value: fmt(mrr, "R$ ") },
-    { label: "Total clientes",   value: String(clients.length) },
+    { label: "Clientes ativos",      value: String(active.length),   accent: false },
+    { label: "MRR",                  value: fmt(mrr, "R$ "),          accent: false },
+    { label: "Total clientes",       value: String(clients.length),   accent: false },
+    { label: "Aprovações pendentes", value: String(approvals.length), accent: approvals.length > 0 },
   ];
 
   return (
@@ -55,14 +62,73 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI bar */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((k) => (
-          <div key={k.label} className="bg-zinc-900 border border-zinc-800 rounded-lg px-5 py-4">
+          <div
+            key={k.label}
+            className={`bg-zinc-900 border rounded-lg px-5 py-4 ${
+              k.accent ? "border-amber-500/40" : "border-zinc-800"
+            }`}
+          >
             <p className="text-xs text-zinc-500 uppercase tracking-wider">{k.label}</p>
-            <p className="text-2xl font-bold text-white mt-1">{k.value}</p>
+            <p className={`text-2xl font-bold mt-1 ${k.accent ? "text-amber-400" : "text-white"}`}>
+              {k.value}
+            </p>
           </div>
         ))}
       </div>
+
+      {/* Ações pendentes */}
+      {(atRisk.length > 0 || approvals.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {atRisk.length > 0 && (
+            <div className="bg-zinc-900 border border-amber-500/20 rounded-lg p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle size={14} className="text-amber-400" aria-hidden="true" />
+                <h2 className="text-sm font-medium text-amber-400">Clientes em risco</h2>
+              </div>
+              <div className="space-y-1">
+                {atRisk.map((c) => (
+                  <Link
+                    key={c.id}
+                    href={`/agency/clients/${c.id}`}
+                    className="flex items-center justify-between rounded px-2 py-2 hover:bg-zinc-800 transition-colors"
+                  >
+                    <div>
+                      <p className="text-sm text-white">{c.brand}</p>
+                      <p className="text-xs text-zinc-500">{c.name}</p>
+                    </div>
+                    <span className="text-xs text-amber-400">Ver →</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+          {approvals.length > 0 && (
+            <div className="bg-zinc-900 border border-violet-500/20 rounded-lg p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <Clock size={14} className="text-violet-400" aria-hidden="true" />
+                <h2 className="text-sm font-medium text-violet-400">Criativos aguardando aprovação</h2>
+              </div>
+              <div className="space-y-1">
+                {approvals.slice(0, 5).map((a) => (
+                  <Link
+                    key={a.id}
+                    href="/agency/approvals"
+                    className="flex items-center justify-between rounded px-2 py-2 hover:bg-zinc-800 transition-colors"
+                  >
+                    <div>
+                      <p className="text-sm text-white">{a.title}</p>
+                      <p className="text-xs text-zinc-500">{a.brand ?? a.client_name}</p>
+                    </div>
+                    <span className="text-xs text-zinc-500">Ver →</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Clients table */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
