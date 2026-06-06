@@ -37,9 +37,21 @@ app.add_middleware(
 
 
 @app.on_event("startup")
-def startup():
-    init_web_db()
-    init_pool()
+async def startup():
+    import asyncio, traceback
+
+    async def _init():
+        loop = asyncio.get_event_loop()
+        try:
+            await loop.run_in_executor(None, init_web_db)
+        except Exception:
+            traceback.print_exc()
+        try:
+            await loop.run_in_executor(None, init_pool)
+        except Exception:
+            traceback.print_exc()
+
+    asyncio.create_task(_init())
 
 
 app.include_router(agency_auth.router)
