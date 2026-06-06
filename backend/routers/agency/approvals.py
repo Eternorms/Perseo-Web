@@ -38,7 +38,7 @@ def list_approvals(
 def submit_approval(
     body: SubmitApproval,
     db: _Conn = Depends(get_db),
-    _=Depends(require_internal),
+    _=Depends(current_agency_user),
 ):
     db.execute(
         """INSERT INTO creative_approvals

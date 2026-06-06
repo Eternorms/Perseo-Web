@@ -12,6 +12,9 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
   const [chatInput, setChatInput] = useState("");
   const [portalToken, setPortalToken] = useState<string | null>(null);
   const [tab, setTab] = useState<"overview" | "criativos" | "chat">("overview");
+  const [showNewCreative, setShowNewCreative] = useState(false);
+  const [creativeForm, setCreativeForm] = useState({ title: "", description: "", media_url: "", thumbnail_url: "" });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     api.get<Client>(`/api/agency/clients/${id}`).then(setClient);
@@ -23,6 +26,31 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
       setPortalToken(r.token)
     );
   }, [id]);
+
+  function loadApprovals() {
+    api.get<CreativeApproval[]>(`/api/agency/approvals?status=pending`).then((all) =>
+      setApprovals(all.filter((a) => a.client_id === Number(id)))
+    );
+  }
+
+  async function submitCreative() {
+    if (!creativeForm.title || !creativeForm.media_url) return;
+    setSubmitting(true);
+    try {
+      await api.post(`/api/agency/approvals`, {
+        client_id: Number(id),
+        title: creativeForm.title,
+        description: creativeForm.description || null,
+        media_url: creativeForm.media_url,
+        thumbnail_url: creativeForm.thumbnail_url || null,
+      });
+      setCreativeForm({ title: "", description: "", media_url: "", thumbnail_url: "" });
+      setShowNewCreative(false);
+      loadApprovals();
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   async function sendMessage() {
     if (!chatInput.trim()) return;
@@ -108,6 +136,74 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
       {/* Criativos */}
       {tab === "criativos" && (
         <div className="space-y-3">
+          <div className="flex justify-end">
+            <button
+              onClick={() => setShowNewCreative((v) => !v)}
+              className="px-3 py-1.5 bg-violet-600 hover:bg-violet-500 text-white text-xs rounded-md transition-colors"
+            >
+              + Enviar criativo
+            </button>
+          </div>
+
+          {showNewCreative && (
+            <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-4 space-y-3">
+              <p className="text-sm font-medium text-white">Novo criativo para aprovação</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="text-xs text-zinc-400 block mb-1">Título *</label>
+                  <input
+                    value={creativeForm.title}
+                    onChange={(e) => setCreativeForm((f) => ({ ...f, title: e.target.value }))}
+                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-sm text-white focus:outline-none focus:border-violet-500"
+                    placeholder="Ex: Anúncio UGC - Produto X"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs text-zinc-400 block mb-1">URL da mídia *</label>
+                  <input
+                    value={creativeForm.media_url}
+                    onChange={(e) => setCreativeForm((f) => ({ ...f, media_url: e.target.value }))}
+                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-sm text-white focus:outline-none focus:border-violet-500"
+                    placeholder="https://drive.google.com/..."
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-zinc-400 block mb-1">Descrição</label>
+                  <input
+                    value={creativeForm.description}
+                    onChange={(e) => setCreativeForm((f) => ({ ...f, description: e.target.value }))}
+                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-sm text-white focus:outline-none focus:border-violet-500"
+                    placeholder="Contexto do criativo"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-zinc-400 block mb-1">URL da thumbnail</label>
+                  <input
+                    value={creativeForm.thumbnail_url}
+                    onChange={(e) => setCreativeForm((f) => ({ ...f, thumbnail_url: e.target.value }))}
+                    className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-sm text-white focus:outline-none focus:border-violet-500"
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => setShowNewCreative(false)}
+                  className="px-3 py-1.5 text-zinc-400 hover:text-zinc-200 text-xs"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={submitCreative}
+                  disabled={submitting || !creativeForm.title || !creativeForm.media_url}
+                  className="px-4 py-1.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-xs rounded-md transition-colors"
+                >
+                  {submitting ? "Enviando..." : "Enviar para aprovação"}
+                </button>
+              </div>
+            </div>
+          )}
+
           {approvals.length === 0 ? (
             <p className="text-zinc-500 text-sm">Nenhum criativo pendente.</p>
           ) : (

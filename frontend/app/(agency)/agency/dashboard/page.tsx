@@ -36,9 +36,9 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const active = clients.filter((c) => c.stage === "active");
+  const active = clients.filter((c) => !["churned"].includes(c.stage));
   const mrr = clients
-    .filter((c) => ["active", "at_risk"].includes(c.stage))
+    .filter((c) => c.stage !== "churned")
     .reduce((s, c) => s + (c.plan_value ?? 0), 0);
 
   const kpis = [
