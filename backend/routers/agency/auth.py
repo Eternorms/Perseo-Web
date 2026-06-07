@@ -46,6 +46,21 @@ def me(user: dict = Depends(current_agency_user)):
     return user
 
 
+@router.post("/setup", status_code=201)
+def setup_first_admin(body: CreateUserBody, db: _Conn = Depends(get_db)):
+    """Cria o primeiro admin. Só funciona se não houver nenhum usuário."""
+    count = db.execute("SELECT COUNT(*) as n FROM agency_users").fetchone()
+    if count and count["n"] > 0:
+        raise HTTPException(status_code=403, detail="Setup já realizado")
+    hashed = hash_password(body.password)
+    db.execute(
+        "INSERT INTO agency_users (email, name, password_hash, role) VALUES (%s, %s, %s, 'admin')",
+        [body.email, body.name, hashed],
+    )
+    db.commit()
+    return {"ok": True}
+
+
 @router.post("/users", status_code=201)
 def create_user(body: CreateUserBody, db: _Conn = Depends(get_db), user: dict = Depends(current_agency_user)):
     if user["role"] != "admin":
