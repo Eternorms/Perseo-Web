@@ -47,12 +47,6 @@ export default function DashboardPage() {
     .reduce((s, c) => s + (c.plan_value ?? 0), 0);
   const atRisk = clients.filter((c) => c.stage === "at_risk");
 
-  const kpis = [
-    { label: "Clientes ativos",      value: String(active.length),   accent: false },
-    { label: "MRR",                  value: fmt(mrr, "R$ "),          accent: false },
-    { label: "Total clientes",       value: String(clients.length),   accent: false },
-    { label: "Aprovações pendentes", value: String(approvals.length), accent: approvals.length > 0 },
-  ];
 
   return (
     <div className="p-8 space-y-8">
@@ -63,19 +57,43 @@ export default function DashboardPage() {
 
       {/* KPI bar */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map((k) => (
-          <div
-            key={k.label}
-            className={`bg-zinc-900 border rounded-lg px-5 py-4 ${
-              k.accent ? "border-amber-500/40" : "border-zinc-800"
-            }`}
-          >
-            <p className="text-xs text-zinc-500 uppercase tracking-wider">{k.label}</p>
-            <p className={`text-2xl font-bold mt-1 ${k.accent ? "text-amber-400" : "text-white"}`}>
-              {k.value}
-            </p>
-          </div>
-        ))}
+        {/* MRR — hero card */}
+        <div className="bg-violet-950 border border-violet-800/50 rounded-xl px-5 py-5 lg:col-span-1">
+          <p className="text-xs text-violet-400 uppercase tracking-widest font-medium">MRR</p>
+          <p className="text-3xl font-bold text-violet-200 mt-2">{fmt(mrr, "R$ ")}</p>
+          <p className="text-xs text-violet-600 mt-1">receita mensal</p>
+        </div>
+
+        {/* Clientes ativos */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-5">
+          <p className="text-xs text-zinc-500 uppercase tracking-widest font-medium">Ativos</p>
+          <p className="text-2xl font-bold text-white mt-2">{active.length}</p>
+          <p className="text-xs text-zinc-600 mt-1">clientes</p>
+        </div>
+
+        {/* Total clientes */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-5">
+          <p className="text-xs text-zinc-500 uppercase tracking-widest font-medium">Total</p>
+          <p className="text-2xl font-bold text-white mt-2">{clients.length}</p>
+          <p className="text-xs text-zinc-600 mt-1">cadastrados</p>
+        </div>
+
+        {/* Aprovações pendentes */}
+        <div className={`border rounded-xl px-5 py-5 ${
+          approvals.length > 0
+            ? "bg-amber-950/30 border-amber-700/40"
+            : "bg-zinc-900 border-zinc-800"
+        }`}>
+          <p className={`text-xs uppercase tracking-widest font-medium ${
+            approvals.length > 0 ? "text-amber-500" : "text-zinc-500"
+          }`}>Pendentes</p>
+          <p className={`text-2xl font-bold mt-2 ${
+            approvals.length > 0 ? "text-amber-400" : "text-white"
+          }`}>{approvals.length}</p>
+          <p className={`text-xs mt-1 ${
+            approvals.length > 0 ? "text-amber-700" : "text-zinc-600"
+          }`}>aprovações</p>
+        </div>
       </div>
 
       {/* Ações pendentes */}

@@ -1,8 +1,9 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import { Home, Play, MessageSquare, Upload } from "lucide-react";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -15,6 +16,7 @@ export default function ClientPortalLayout({
 }) {
   const { token } = use(params);
   const router = useRouter();
+  const pathname = usePathname();
   const [ready, setReady] = useState(false);
   const [clientName, setClientName] = useState("");
 
@@ -47,10 +49,10 @@ export default function ClientPortalLayout({
   const base = `/c/${token}`;
 
   const NAV = [
-    { href: base,               label: "Início",      icon: "⊞" },
-    { href: `${base}/criativos`, label: "Criativos",   icon: "▶" },
-    { href: `${base}/chat`,      label: "Falar com agência", icon: "💬" },
-    { href: `${base}/materiais`, label: "Enviar material",   icon: "↑" },
+    { href: base,                label: "Início",    Icon: Home },
+    { href: `${base}/criativos`, label: "Criativos", Icon: Play },
+    { href: `${base}/chat`,      label: "Chat",      Icon: MessageSquare },
+    { href: `${base}/materiais`, label: "Materiais", Icon: Upload },
   ];
 
   return (
@@ -67,17 +69,23 @@ export default function ClientPortalLayout({
       <div className="max-w-2xl mx-auto px-4 py-6">{children}</div>
 
       {/* Bottom nav (mobile-friendly) */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-zinc-800 px-4 py-2 flex justify-around">
-        {NAV.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="flex flex-col items-center gap-0.5 text-zinc-500 hover:text-zinc-100 transition-colors py-1 px-2"
-          >
-            <span className="text-lg leading-none">{item.icon}</span>
-            <span className="text-xs">{item.label}</span>
-          </Link>
-        ))}
+      <nav className="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-sm border-t border-zinc-800 px-2 py-2 flex justify-around">
+        {NAV.map(({ href, label, Icon }) => {
+          const active = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              aria-current={active ? "page" : undefined}
+              className={`flex flex-col items-center gap-0.5 transition-colors py-1 px-3 rounded-lg ${
+                active ? "text-violet-400" : "text-zinc-500 hover:text-zinc-100"
+              }`}
+            >
+              <Icon size={20} aria-hidden="true" />
+              <span className="text-xs">{label}</span>
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Bottom nav spacer */}

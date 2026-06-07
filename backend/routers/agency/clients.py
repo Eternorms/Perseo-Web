@@ -95,12 +95,23 @@ def create_client(
 
 
 class UpdateClientBody(BaseModel):
+    name: Optional[str] = None
+    brand: Optional[str] = None
+    niche: Optional[str] = None
+    plan: Optional[str] = None
     stage: Optional[str] = None
     plan_value: Optional[float] = None
     monthly_budget: Optional[float] = None
+    client_email: Optional[str] = None
+    client_whatsapp: Optional[str] = None
     notes: Optional[str] = None
     last_contact_at: Optional[str] = None
 
+ALLOWED_UPDATE_COLS = {
+    "name", "brand", "niche", "plan", "stage",
+    "plan_value", "monthly_budget", "client_email",
+    "client_whatsapp", "notes", "last_contact_at",
+}
 
 @router.patch("/{client_id}")
 def update_client(
@@ -109,7 +120,10 @@ def update_client(
     db: _Conn = Depends(get_db),
     _=Depends(current_agency_user),
 ):
-    updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    updates = {
+        k: v for k, v in body.model_dump().items()
+        if v is not None and k in ALLOWED_UPDATE_COLS
+    }
     if not updates:
         return {"ok": True}
     cols = ", ".join(f"{k} = %s" for k in updates)

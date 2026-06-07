@@ -43,9 +43,16 @@ export default function AgencyLayout({ children }: { children: React.ReactNode }
     <div className="flex h-screen bg-zinc-950 text-zinc-100">
       {/* Sidebar */}
       <aside className="w-56 shrink-0 bg-zinc-900 border-r border-zinc-800 flex flex-col">
-        <div className="px-5 py-5 border-b border-zinc-800">
-          <span className="font-bold text-lg tracking-tight text-white">Perseo</span>
-          <p className="text-xs text-zinc-500 mt-0.5">Agency Dashboard</p>
+        <div className="px-4 py-4 border-b border-zinc-800">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-violet-600 rounded-xl flex items-center justify-center shrink-0 shadow-sm shadow-violet-900/60">
+              <span className="text-white font-bold text-sm select-none">P</span>
+            </div>
+            <div>
+              <p className="font-semibold text-sm text-white leading-none">Perseo</p>
+              <p className="text-xs text-zinc-500 leading-none mt-0.5">Agency</p>
+            </div>
+          </div>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1" aria-label="Navegação principal">
@@ -76,7 +83,14 @@ export default function AgencyLayout({ children }: { children: React.ReactNode }
         </nav>
 
         <div className="px-4 py-4 border-t border-zinc-800">
-          <p className="text-xs text-zinc-400 truncate mb-2">{user.name}</p>
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-7 h-7 rounded-full bg-violet-600/20 border border-violet-600/30 flex items-center justify-center shrink-0">
+              <span className="text-violet-400 text-xs font-semibold select-none">
+                {user.name.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <p className="text-xs text-zinc-300 truncate flex-1">{user.name}</p>
+          </div>
           <button
             onClick={logout}
             className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
