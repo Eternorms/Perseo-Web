@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 const BACKEND = process.env.BACKEND_URL ?? "http://localhost:8000";
 
+// Headers that must NOT be forwarded to the browser — the proxy decompresses the
+// body automatically, so re-sending the encoding header causes ERR_CONTENT_DECODING_FAILED.
+const STRIP_RES_HEADERS = new Set([
+  "content-encoding",
+  "content-length",
+  "transfer-encoding",
+  "connection",
+]);
+
 async function proxy(req: NextRequest): Promise<NextResponse> {
   const path = req.nextUrl.pathname;
   const search = req.nextUrl.search;
@@ -27,7 +36,9 @@ async function proxy(req: NextRequest): Promise<NextResponse> {
 
   const resHeaders = new Headers();
   upstream.headers.forEach((value, key) => {
-    resHeaders.set(key, value);
+    if (!STRIP_RES_HEADERS.has(key.toLowerCase())) {
+      resHeaders.set(key, value);
+    }
   });
 
   return new NextResponse(await upstream.arrayBuffer(), {
