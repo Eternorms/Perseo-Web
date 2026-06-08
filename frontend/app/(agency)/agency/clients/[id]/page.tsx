@@ -1,9 +1,9 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
-import { Copy, ExternalLink, Pencil, X, Check } from "lucide-react";
+import { use, useEffect, useState, useCallback } from "react";
+import { Copy, ExternalLink, Pencil, X, Check, Plus } from "lucide-react";
 import { api } from "@/lib/api";
-import { Client, CreativeApproval, ChatMessage } from "@/lib/types";
+import { Client, CreativeApproval, ChatMessage, Task } from "@/lib/types";
 
 const STAGE_OPTIONS = [
   { value: "prospect", label: "Prospect" },
@@ -13,24 +13,47 @@ const STAGE_OPTIONS = [
   { value: "churned",  label: "Churn" },
 ];
 
+const PIPELINE_STEPS = [
+  { value: "prospect", label: "Prospect",  color: "bg-blue-500",    text: "text-blue-400" },
+  { value: "active",   label: "Ativo",     color: "bg-emerald-500", text: "text-emerald-400" },
+  { value: "at_risk",  label: "Em risco",  color: "bg-amber-500",   text: "text-amber-400" },
+  { value: "paused",   label: "Pausado",   color: "bg-zinc-500",    text: "text-zinc-400" },
+  { value: "churned",  label: "Churn",     color: "bg-red-500",     text: "text-red-400" },
+];
+
+const KANBAN_COLS = [
+  { key: "pending",  label: "Aguardando", border: "border-amber-500/20",   text: "text-amber-400" },
+  { key: "approved", label: "Aprovado",   border: "border-emerald-500/20", text: "text-emerald-400" },
+  { key: "revision", label: "Revisão",    border: "border-blue-500/20",    text: "text-blue-400" },
+  { key: "rejected", label: "Rejeitado",  border: "border-red-500/20",     text: "text-red-400" },
+];
+
+const PRIORITY_DOT: Record<string, string> = {
+  high: "bg-red-500", medium: "bg-amber-500", low: "bg-zinc-500",
+};
+
 export default function ClientProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [client, setClient] = useState<Client | null>(null);
   const [approvals, setApprovals] = useState<CreativeApproval[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [clientTasks, setClientTasks] = useState<Task[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [portalToken, setPortalToken] = useState<string | null>(null);
-  const [tab, setTab] = useState<"overview" | "criativos" | "chat">("overview");
+  const [tab, setTab] = useState<"overview" | "criativos" | "chat" | "funil">("overview");
 
-  // Edit state
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Client>>({});
   const [saving, setSaving] = useState(false);
 
-  // Creative form state
   const [showNewCreative, setShowNewCreative] = useState(false);
   const [creativeForm, setCreativeForm] = useState({ title: "", description: "", media_url: "", thumbnail_url: "" });
   const [submitting, setSubmitting] = useState(false);
+
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  const [taskForm, setTaskForm] = useState({ title: "", priority: "medium", due_date: "" });
+  const [creatingTask, setCreatingTask] = useState(false);
+  const [movingStage, setMovingStage] = useState(false);
 
   function loadApprovals() {
     api.get<CreativeApproval[]>(`/api/agency/approvals?client_id=${id}`)
@@ -44,6 +67,12 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
       .catch(console.error);
   }
 
+  const loadClientTasks = useCallback(() => {
+    api.get<Task[]>(`/api/agency/tasks?client_id=${id}`)
+      .then((all) => setClientTasks(all.filter((t) => t.status !== "done")))
+      .catch(console.error);
+  }, [id]);
+
   useEffect(() => {
     api.get<Client>(`/api/agency/clients/${id}`).then((c) => {
       setClient(c);
@@ -51,17 +80,21 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
     });
     loadApprovals();
     loadMessages();
+    loadClientTasks();
     api.get<{ token: string }>(`/api/agency/clients/${id}/portal-token`).then((r) =>
       setPortalToken(r.token)
     );
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Chat polling when tab is active
   useEffect(() => {
     if (tab !== "chat") return;
     const interval = setInterval(loadMessages, 5000);
     return () => clearInterval(interval);
   }, [tab, id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (tab === "funil") loadClientTasks();
+  }, [tab, loadClientTasks]);
 
   async function saveEdit() {
     setSaving(true);
@@ -104,6 +137,40 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
     loadMessages();
   }
 
+  async function moveToStage(stage: string) {
+    if (!client || movingStage) return;
+    setMovingStage(true);
+    try {
+      await api.patch(`/api/agency/clients/${id}`, { stage });
+      setClient((prev) => prev ? { ...prev, stage } : prev);
+    } finally {
+      setMovingStage(false);
+    }
+  }
+
+  async function createClientTask() {
+    if (!taskForm.title.trim()) return;
+    setCreatingTask(true);
+    try {
+      await api.post("/api/agency/tasks", {
+        title: taskForm.title,
+        priority: taskForm.priority,
+        due_date: taskForm.due_date || null,
+        client_id: Number(id),
+      });
+      setTaskForm({ title: "", priority: "medium", due_date: "" });
+      setShowTaskForm(false);
+      loadClientTasks();
+    } finally {
+      setCreatingTask(false);
+    }
+  }
+
+  async function completeTask(taskId: number) {
+    await api.patch(`/api/agency/tasks/${taskId}`, { status: "done" });
+    setClientTasks((prev) => prev.filter((t) => t.id !== taskId));
+  }
+
   if (!client) return (
     <div className="p-8 text-zinc-500 text-sm">Carregando...</div>
   );
@@ -114,6 +181,11 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
 
   const inputCls = "w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/20 transition-all";
 
+  const currentStageIdx = PIPELINE_STEPS.findIndex((s) => s.value === client.stage);
+  const nextStage = currentStageIdx >= 0 && currentStageIdx < PIPELINE_STEPS.length - 1
+    ? PIPELINE_STEPS[currentStageIdx + 1]
+    : null;
+
   return (
     <div className="p-8 space-y-6">
       {/* Header */}
@@ -123,7 +195,6 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
           <p className="text-zinc-400 text-sm mt-0.5">{client.name} · {client.niche}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap justify-end">
-          {/* Edit toggle */}
           {!editing ? (
             <button
               onClick={() => { setEditing(true); setEditForm(client); }}
@@ -151,8 +222,6 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
               </button>
             </>
           )}
-
-          {/* Portal buttons */}
           {portalUrl && (
             <>
               <button
@@ -180,7 +249,7 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
 
       {/* Tabs */}
       <div role="tablist" aria-label="Seções do cliente" className="flex gap-2 border-b border-zinc-800">
-        {(["overview", "criativos", "chat"] as const).map((t) => (
+        {(["overview", "funil", "criativos", "chat"] as const).map((t) => (
           <button
             key={t}
             role="tab"
@@ -192,7 +261,9 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
                 : "border-transparent text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            {t === "overview" ? "Visão geral" : t === "criativos" ? "Criativos" : "Chat"}
+            {t === "overview" ? "Visão geral" :
+             t === "funil"    ? "Funil" :
+             t === "criativos" ? "Criativos" : "Chat"}
           </button>
         ))}
       </div>
@@ -201,7 +272,6 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
       {tab === "overview" && (
         <div role="tabpanel">
           {editing ? (
-            /* Edit form */
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
               <p className="text-sm font-medium text-white mb-2">Editar cliente</p>
               <div className="grid grid-cols-2 gap-4">
@@ -219,11 +289,7 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
                 </div>
                 <div>
                   <label className="text-xs text-zinc-400 block mb-1">Status</label>
-                  <select
-                    value={editForm.stage ?? ""}
-                    onChange={(e) => setEditForm((f) => ({ ...f, stage: e.target.value }))}
-                    className={inputCls}
-                  >
+                  <select value={editForm.stage ?? ""} onChange={(e) => setEditForm((f) => ({ ...f, stage: e.target.value }))} className={inputCls}>
                     {STAGE_OPTIONS.map((o) => (
                       <option key={o.value} value={o.value}>{o.label}</option>
                     ))}
@@ -252,7 +318,6 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
               </div>
             </div>
           ) : (
-            /* Read-only KPIs */
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: "Budget mensal", value: client.monthly_budget ? `R$ ${client.monthly_budget.toLocaleString("pt-BR")}` : "—" },
@@ -267,6 +332,189 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Funil */}
+      {tab === "funil" && (
+        <div role="tabpanel" className="space-y-6">
+
+          {/* Pipeline steps */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+            <p className="text-xs text-zinc-500 uppercase tracking-widest font-medium mb-4">Estágio no pipeline</p>
+            <div className="flex items-center gap-1 mb-4">
+              {PIPELINE_STEPS.map((step, idx) => {
+                const isCurrent = step.value === client.stage;
+                const isPast = idx < currentStageIdx;
+                return (
+                  <div key={step.value} className="flex items-center flex-1 min-w-0">
+                    <button
+                      onClick={() => moveToStage(step.value)}
+                      disabled={movingStage}
+                      className={`flex-1 py-2 px-2 rounded-lg text-xs font-medium text-center transition-all ${
+                        isCurrent
+                          ? `${step.color} text-white shadow-lg scale-105`
+                          : isPast
+                          ? "bg-zinc-700/50 text-zinc-400 hover:bg-zinc-700"
+                          : "bg-zinc-800 text-zinc-600 hover:bg-zinc-700 hover:text-zinc-400"
+                      }`}
+                    >
+                      {step.label}
+                    </button>
+                    {idx < PIPELINE_STEPS.length - 1 && (
+                      <div className={`w-4 h-0.5 shrink-0 mx-0.5 ${isPast ? "bg-zinc-600" : "bg-zinc-800"}`} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            {nextStage && (
+              <button
+                onClick={() => moveToStage(nextStage.value)}
+                disabled={movingStage}
+                className={`text-xs px-3 py-1.5 rounded-lg border border-zinc-700 transition-colors ${nextStage.text} hover:border-zinc-500 hover:text-white`}
+              >
+                {movingStage ? "Movendo..." : `Mover para ${nextStage.label} →`}
+              </button>
+            )}
+          </div>
+
+          {/* Kanban de aprovações */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs text-zinc-500 uppercase tracking-widest font-medium">Criativos</p>
+              <button
+                onClick={() => setShowNewCreative((v) => !v)}
+                className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors"
+              >
+                <Plus size={12} />
+                Enviar criativo
+              </button>
+            </div>
+
+            {showNewCreative && (
+              <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-4 space-y-3 mb-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="col-span-2">
+                    <label className="text-xs text-zinc-400 block mb-1">Título *</label>
+                    <input value={creativeForm.title} onChange={(e) => setCreativeForm((f) => ({ ...f, title: e.target.value }))} className={inputCls} placeholder="Ex: Anúncio UGC - Produto X" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="text-xs text-zinc-400 block mb-1">URL da mídia *</label>
+                    <input value={creativeForm.media_url} onChange={(e) => setCreativeForm((f) => ({ ...f, media_url: e.target.value }))} className={inputCls} placeholder="https://drive.google.com/..." />
+                  </div>
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <button onClick={() => setShowNewCreative(false)} className="text-xs text-zinc-400 hover:text-zinc-200 px-3 py-1.5">Cancelar</button>
+                  <button
+                    onClick={submitCreative}
+                    disabled={submitting || !creativeForm.title || !creativeForm.media_url}
+                    className="px-4 py-1.5 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-xs rounded-lg transition-colors"
+                  >
+                    {submitting ? "Enviando..." : "Enviar para aprovação"}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {KANBAN_COLS.map((col) => {
+                const colItems = approvals.filter((a) => a.status === col.key);
+                return (
+                  <div key={col.key} className={`bg-zinc-900 border rounded-lg p-3 ${col.border}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`text-xs font-medium ${col.text}`}>{col.label}</span>
+                      <span className="text-xs text-zinc-600">{colItems.length}</span>
+                    </div>
+                    <div className="space-y-2">
+                      {colItems.length === 0 ? (
+                        <p className="text-xs text-zinc-700 py-2">Vazio</p>
+                      ) : (
+                        colItems.map((a) => (
+                          <div key={a.id} className="bg-zinc-800/60 rounded-lg p-2.5">
+                            <p className="text-xs text-white font-medium leading-tight truncate">{a.title}</p>
+                            {a.client_feedback && (
+                              <p className="text-xs text-zinc-500 mt-1 line-clamp-2">"{a.client_feedback}"</p>
+                            )}
+                            {a.media_url && (
+                              <a href={a.media_url} target="_blank" rel="noopener noreferrer" className="text-xs text-violet-400 hover:underline mt-1 block">
+                                Ver mídia →
+                              </a>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Tarefas do cliente */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs text-zinc-500 uppercase tracking-widest font-medium">Tarefas</p>
+              <button
+                onClick={() => setShowTaskForm((v) => !v)}
+                className="flex items-center gap-1 text-xs text-zinc-400 hover:text-white transition-colors"
+              >
+                {showTaskForm ? <X size={12} /> : <Plus size={12} />}
+                {showTaskForm ? "Cancelar" : "Nova tarefa"}
+              </button>
+            </div>
+
+            {showTaskForm && (
+              <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-4 space-y-3 mb-3">
+                <input
+                  value={taskForm.title}
+                  onChange={(e) => setTaskForm((f) => ({ ...f, title: e.target.value }))}
+                  placeholder="Título da tarefa"
+                  className={inputCls}
+                  onKeyDown={(e) => e.key === "Enter" && createClientTask()}
+                />
+                <div className="flex gap-2">
+                  <select value={taskForm.priority} onChange={(e) => setTaskForm((f) => ({ ...f, priority: e.target.value }))} className={inputCls}>
+                    <option value="low">Baixa</option>
+                    <option value="medium">Média</option>
+                    <option value="high">Alta</option>
+                  </select>
+                  <input type="date" value={taskForm.due_date} onChange={(e) => setTaskForm((f) => ({ ...f, due_date: e.target.value }))} className={inputCls} />
+                </div>
+                <button
+                  onClick={createClientTask}
+                  disabled={creatingTask || !taskForm.title.trim()}
+                  className="w-full py-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white text-sm rounded-lg transition-colors"
+                >
+                  {creatingTask ? "Criando..." : "Criar tarefa"}
+                </button>
+              </div>
+            )}
+
+            {clientTasks.length === 0 ? (
+              <p className="text-zinc-600 text-sm">Nenhuma tarefa pendente para este cliente.</p>
+            ) : (
+              <div className="space-y-2">
+                {clientTasks.map((t) => (
+                  <div key={t.id} className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3 flex items-start gap-3">
+                    <button
+                      onClick={() => completeTask(t.id)}
+                      className="mt-0.5 shrink-0 w-4 h-4 rounded-full border border-zinc-600 hover:border-emerald-400 hover:bg-emerald-400/10 transition-colors"
+                      aria-label="Marcar como concluída"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white">{t.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className={`inline-block w-1.5 h-1.5 rounded-full ${PRIORITY_DOT[t.priority]}`} />
+                        <span className="text-xs text-zinc-600">{t.priority === "high" ? "Alta" : t.priority === "medium" ? "Média" : "Baixa"}</span>
+                        {t.due_date && <span className="text-xs text-zinc-600">· {new Date(t.due_date + "T00:00:00").toLocaleDateString("pt-BR")}</span>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -288,48 +536,23 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
                   <label className="text-xs text-zinc-400 block mb-1">Título *</label>
-                  <input
-                    value={creativeForm.title}
-                    onChange={(e) => setCreativeForm((f) => ({ ...f, title: e.target.value }))}
-                    className={inputCls}
-                    placeholder="Ex: Anúncio UGC - Produto X"
-                  />
+                  <input value={creativeForm.title} onChange={(e) => setCreativeForm((f) => ({ ...f, title: e.target.value }))} className={inputCls} placeholder="Ex: Anúncio UGC - Produto X" />
                 </div>
                 <div className="col-span-2">
                   <label className="text-xs text-zinc-400 block mb-1">URL da mídia *</label>
-                  <input
-                    value={creativeForm.media_url}
-                    onChange={(e) => setCreativeForm((f) => ({ ...f, media_url: e.target.value }))}
-                    className={inputCls}
-                    placeholder="https://drive.google.com/..."
-                  />
+                  <input value={creativeForm.media_url} onChange={(e) => setCreativeForm((f) => ({ ...f, media_url: e.target.value }))} className={inputCls} placeholder="https://drive.google.com/..." />
                 </div>
                 <div>
                   <label className="text-xs text-zinc-400 block mb-1">Descrição</label>
-                  <input
-                    value={creativeForm.description}
-                    onChange={(e) => setCreativeForm((f) => ({ ...f, description: e.target.value }))}
-                    className={inputCls}
-                    placeholder="Contexto do criativo"
-                  />
+                  <input value={creativeForm.description} onChange={(e) => setCreativeForm((f) => ({ ...f, description: e.target.value }))} className={inputCls} placeholder="Contexto do criativo" />
                 </div>
                 <div>
                   <label className="text-xs text-zinc-400 block mb-1">URL da thumbnail</label>
-                  <input
-                    value={creativeForm.thumbnail_url}
-                    onChange={(e) => setCreativeForm((f) => ({ ...f, thumbnail_url: e.target.value }))}
-                    className={inputCls}
-                    placeholder="https://..."
-                  />
+                  <input value={creativeForm.thumbnail_url} onChange={(e) => setCreativeForm((f) => ({ ...f, thumbnail_url: e.target.value }))} className={inputCls} placeholder="https://..." />
                 </div>
               </div>
               <div className="flex gap-2 justify-end">
-                <button
-                  onClick={() => setShowNewCreative(false)}
-                  className="px-3 py-1.5 text-zinc-400 hover:text-zinc-200 text-xs"
-                >
-                  Cancelar
-                </button>
+                <button onClick={() => setShowNewCreative(false)} className="px-3 py-1.5 text-zinc-400 hover:text-zinc-200 text-xs">Cancelar</button>
                 <button
                   onClick={submitCreative}
                   disabled={submitting || !creativeForm.title || !creativeForm.media_url}
@@ -363,13 +586,10 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
                     <p className="text-sm font-medium text-white">{a.title}</p>
                     <p className="text-xs text-zinc-500 mt-0.5">{a.description}</p>
                     {a.client_feedback && (
-                      <p className="text-xs text-zinc-400 bg-zinc-800 rounded px-2 py-1 mt-1.5">
-                        "{a.client_feedback}"
-                      </p>
+                      <p className="text-xs text-zinc-400 bg-zinc-800 rounded px-2 py-1 mt-1.5">"{a.client_feedback}"</p>
                     )}
                     {a.media_url && (
-                      <a href={a.media_url} target="_blank" rel="noopener noreferrer"
-                         className="text-xs text-violet-400 hover:underline mt-1 block">
+                      <a href={a.media_url} target="_blank" rel="noopener noreferrer" className="text-xs text-violet-400 hover:underline mt-1 block">
                         Ver mídia →
                       </a>
                     )}
@@ -394,9 +614,7 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
               messages.map((m) => (
                 <div key={m.id} className={`flex ${m.sender_type === "agency" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-xs px-3 py-2 rounded-xl text-sm ${
-                    m.sender_type === "agency"
-                      ? "bg-violet-600 text-white"
-                      : "bg-zinc-800 text-zinc-200"
+                    m.sender_type === "agency" ? "bg-violet-600 text-white" : "bg-zinc-800 text-zinc-200"
                   }`}>
                     <p>{m.content}</p>
                     <p className="text-xs opacity-50 mt-0.5">
@@ -415,10 +633,7 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
               placeholder="Digite uma mensagem..."
               className="flex-1 px-3.5 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-sm text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/20 transition-all"
             />
-            <button
-              onClick={sendMessage}
-              className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm rounded-xl transition-colors"
-            >
+            <button onClick={sendMessage} className="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white text-sm rounded-xl transition-colors">
               Enviar
             </button>
           </div>

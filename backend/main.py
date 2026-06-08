@@ -19,6 +19,7 @@ from routers.agency import meta as agency_meta
 from routers.agency import approvals as agency_approvals
 from routers.agency import schedule as agency_schedule
 from routers.agency import chat as agency_chat
+from routers.agency import tasks as agency_tasks
 from routers.client import portal as client_portal
 from routers.client import approvals as client_approvals
 from routers.client import chat as client_chat
@@ -60,6 +61,7 @@ app.include_router(agency_meta.router)
 app.include_router(agency_approvals.router)
 app.include_router(agency_schedule.router)
 app.include_router(agency_chat.router)
+app.include_router(agency_tasks.router)
 app.include_router(client_portal.router)
 app.include_router(client_approvals.router)
 app.include_router(client_chat.router)

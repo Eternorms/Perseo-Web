@@ -121,6 +121,20 @@ def init_web_db() -> None:
                              CHECK(status IN ('scheduled','completed','cancelled')),
                 created_at   TIMESTAMP DEFAULT NOW()
             )""",
+            """CREATE TABLE IF NOT EXISTS tasks (
+                id          BIGSERIAL PRIMARY KEY,
+                client_id   BIGINT REFERENCES clients(id) ON DELETE SET NULL,
+                title       TEXT NOT NULL,
+                description TEXT,
+                due_date    DATE,
+                priority    TEXT DEFAULT 'medium'
+                            CHECK(priority IN ('low','medium','high')),
+                status      TEXT DEFAULT 'todo'
+                            CHECK(status IN ('todo','in_progress','done')),
+                assigned_to TEXT,
+                created_at  TIMESTAMP DEFAULT NOW(),
+                updated_at  TIMESTAMP DEFAULT NOW()
+            )""",
         ]
 
         for sql in tables:

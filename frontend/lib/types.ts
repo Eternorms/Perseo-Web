@@ -77,6 +77,19 @@ export interface ClientUpload {
   created_at: string;
 }
 
+export interface Task {
+  id: number;
+  client_id: number | null;
+  client_brand: string | null;
+  title: string;
+  description: string | null;
+  due_date: string | null;
+  priority: "low" | "medium" | "high";
+  status: "todo" | "in_progress" | "done";
+  assigned_to: string | null;
+  created_at: string;
+}
+
 export interface MetricCard {
   label: string;
   value: string;
