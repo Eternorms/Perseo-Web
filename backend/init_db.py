@@ -149,6 +149,12 @@ def init_web_db() -> None:
         for sql in tables:
             conn.execute(sql)
 
+        for alter in [
+            "ALTER TABLE creative_approvals ADD COLUMN IF NOT EXISTS scheduled_at TIMESTAMP",
+            "ALTER TABLE creative_approvals ADD COLUMN IF NOT EXISTS meta_post_id TEXT",
+        ]:
+            conn.execute(alter)
+
         conn.commit()
         print("[init_db] schema perseo OK")
 

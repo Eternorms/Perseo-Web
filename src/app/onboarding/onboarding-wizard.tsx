@@ -9,10 +9,11 @@ import {
   saveStep3Action,
   saveStep4Action,
   saveStep5Action,
+  saveServicesAction,
   completeOnboardingAction,
 } from './actions'
 
-const TOTAL_STEPS = 6
+const TOTAL_STEPS = 7
 
 const stepTitles = [
   'Dados da clínica',
@@ -20,6 +21,7 @@ const stepTitles = [
   'Meta Ads',
   'Google Calendar',
   'Agente de IA',
+  'Serviços',
   'Revisão',
 ]
 
@@ -30,6 +32,7 @@ interface Props {
 export default function OnboardingWizard({ client }: Props) {
   const [step, setStep] = useState(Math.min(client.onboarding_step, TOTAL_STEPS))
   const [data, setData] = useState(client)
+  const [services, setServices] = useState<string[]>(client.services ?? [])
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
@@ -113,6 +116,18 @@ export default function OnboardingWizard({ client }: Props) {
       const r = await saveStep5Action(payload)
       if (r.error) { setError(r.error); return }
       next(payload)
+    })
+  }
+
+  function handleStep6() {
+    if (services.length === 0) {
+      setError('Selecione pelo menos um serviço.')
+      return
+    }
+    startTransition(async () => {
+      const r = await saveServicesAction({ services })
+      if (r.error) { setError(r.error); return }
+      next({ services })
     })
   }
 
@@ -281,6 +296,46 @@ export default function OnboardingWizard({ client }: Props) {
         )}
 
         {step === 6 && (
+          <div className="space-y-4">
+            <h2 className="text-sm font-semibold text-white mb-4">Serviços contratados</h2>
+            <p className="text-xs text-neutral-500">Selecione os serviços que fazem parte do seu contrato.</p>
+            {[
+              { value: 'traffic', label: 'Tráfego Pago', desc: 'Gestão de Meta Ads, Google Ads e otimização de campanhas.' },
+              { value: 'content', label: 'Gestão de Conteúdo', desc: 'Produção de criativos UGC, roteiros e publicações.' },
+            ].map(opt => (
+              <label key={opt.value} className={`flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-colors ${
+                services.includes(opt.value)
+                  ? 'border-white/30 bg-white/5'
+                  : 'border-neutral-700 hover:border-neutral-600'
+              }`}>
+                <input
+                  type="checkbox"
+                  className="mt-0.5 accent-white"
+                  checked={services.includes(opt.value)}
+                  onChange={e => setServices(prev =>
+                    e.target.checked ? [...prev, opt.value] : prev.filter(s => s !== opt.value)
+                  )}
+                />
+                <div>
+                  <p className="text-sm font-medium text-white">{opt.label}</p>
+                  <p className="text-xs text-neutral-500 mt-0.5">{opt.desc}</p>
+                </div>
+              </label>
+            ))}
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={handleStep6}
+                disabled={isPending}
+                className="flex-1 px-4 py-2 bg-white text-neutral-900 rounded-lg text-sm font-medium hover:bg-neutral-100 transition-colors disabled:opacity-50"
+              >
+                {isPending ? 'Salvando...' : 'Continuar'}
+              </button>
+              <button type="button" onClick={back} disabled={isPending} className="px-3 py-2 text-neutral-500 hover:text-white text-sm transition-colors disabled:opacity-40">← Voltar</button>
+            </div>
+          </div>
+        )}
+
+        {step === 7 && (
           <div className="space-y-5">
             <h2 className="text-sm font-semibold text-white">Revisão</h2>
             <ReviewSection title="Clínica">
@@ -315,6 +370,13 @@ export default function OnboardingWizard({ client }: Props) {
                 </div>
               )}
             </ReviewSection>
+            {services.length > 0 && (
+              <ReviewSection title="Serviços contratados">
+                {services.map(s => (
+                  <ReviewRow key={s} label={s === 'traffic' ? 'Tráfego Pago' : 'Gestão de Conteúdo'} value="✓" />
+                ))}
+              </ReviewSection>
+            )}
             <div className="flex gap-3 pt-2">
               <button
                 onClick={handleComplete}

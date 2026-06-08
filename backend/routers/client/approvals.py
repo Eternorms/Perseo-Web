@@ -52,5 +52,25 @@ def decide(
            WHERE id = %s""",
         [body.status, body.feedback, approval_id],
     )
+
+    if body.status == "approved":
+        appr = db.execute(
+            "SELECT title, scheduled_at FROM creative_approvals WHERE id = %s",
+            [approval_id],
+        ).fetchone()
+        sched_info = (
+            f" Agendado para {appr['scheduled_at'].strftime('%d/%m/%Y %H:%M') if appr and appr['scheduled_at'] else ''}"
+            if appr and appr["scheduled_at"] else ""
+        )
+        db.execute(
+            "INSERT INTO notifications (client_id, type, title, body) VALUES (%s, %s, %s, %s)",
+            [
+                client["client_id"],
+                "creative_approved",
+                f"Criativo aprovado: {appr['title'] if appr else ''}",
+                f"O cliente aprovou o criativo.{sched_info}",
+            ],
+        )
+
     db.commit()
     return {"ok": True}

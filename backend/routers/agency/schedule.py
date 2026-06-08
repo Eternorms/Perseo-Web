@@ -14,6 +14,7 @@ class SchedulePost(BaseModel):
     description: Optional[str] = None
     media_url: str
     thumbnail_url: Optional[str] = None
+    scheduled_at: Optional[str] = None  # ISO datetime, ex: "2026-07-01T14:00:00"
 
 
 @router.post("", status_code=201)
@@ -24,10 +25,10 @@ def schedule_creative(
 ):
     db.execute(
         """INSERT INTO creative_approvals
-           (client_id, video_id, title, description, media_url, thumbnail_url)
-           VALUES (%s, %s, %s, %s, %s, %s)""",
+           (client_id, video_id, title, description, media_url, thumbnail_url, scheduled_at)
+           VALUES (%s, %s, %s, %s, %s, %s, %s)""",
         [body.client_id, body.video_id, body.title, body.description,
-         body.media_url, body.thumbnail_url],
+         body.media_url, body.thumbnail_url, body.scheduled_at],
     )
     db.execute(
         """INSERT INTO notifications (client_id, type, title, body)

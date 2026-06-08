@@ -110,12 +110,27 @@ export async function saveStep5Action(data: { agent_prompt: string; agent_active
   return { error: null }
 }
 
+export async function saveServicesAction(data: { services: string[] }) {
+  const { supabase, clientId } = await getClientId()
+  if (!clientId) return { error: 'Sessão inválida.' }
+
+  const { error } = await supabase.from('clients').update({
+    services: data.services,
+    onboarding_step: 7,
+    updated_at: new Date().toISOString(),
+  }).eq('id', clientId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/onboarding')
+  return { error: null }
+}
+
 export async function completeOnboardingAction() {
   const { supabase, clientId } = await getClientId()
   if (!clientId) return { error: 'Sessão inválida.' }
 
   const { error } = await supabase.from('clients').update({
-    onboarding_step: 7,
+    onboarding_step: 8,
     status: 'active',
     updated_at: new Date().toISOString(),
   }).eq('id', clientId)

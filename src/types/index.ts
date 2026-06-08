@@ -32,6 +32,7 @@ export interface Client {
   agent_prompt: string | null
   agent_active: boolean
   plan: string
+  services: string[] | null
   monthly_value: number | null
   contact_name: string | null
   contact_phone: string | null
