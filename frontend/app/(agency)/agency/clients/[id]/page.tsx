@@ -32,25 +32,36 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
   const [creativeForm, setCreativeForm] = useState({ title: "", description: "", media_url: "", thumbnail_url: "" });
   const [submitting, setSubmitting] = useState(false);
 
+  function loadApprovals() {
+    api.get<CreativeApproval[]>(`/api/agency/approvals?client_id=${id}`)
+      .then(setApprovals)
+      .catch(console.error);
+  }
+
+  function loadMessages() {
+    api.get<ChatMessage[]>(`/api/agency/chat/${id}/messages`)
+      .then(setMessages)
+      .catch(console.error);
+  }
+
   useEffect(() => {
     api.get<Client>(`/api/agency/clients/${id}`).then((c) => {
       setClient(c);
       setEditForm(c);
     });
-    api.get<CreativeApproval[]>(`/api/agency/approvals?status=pending`).then((all) =>
-      setApprovals(all.filter((a) => a.client_id === Number(id)))
-    );
-    api.get<ChatMessage[]>(`/api/agency/chat/${id}/messages`).then(setMessages);
+    loadApprovals();
+    loadMessages();
     api.get<{ token: string }>(`/api/agency/clients/${id}/portal-token`).then((r) =>
       setPortalToken(r.token)
     );
-  }, [id]);
+  }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function loadApprovals() {
-    api.get<CreativeApproval[]>(`/api/agency/approvals?status=pending`).then((all) =>
-      setApprovals(all.filter((a) => a.client_id === Number(id)))
-    );
-  }
+  // Chat polling when tab is active
+  useEffect(() => {
+    if (tab !== "chat") return;
+    const interval = setInterval(loadMessages, 5000);
+    return () => clearInterval(interval);
+  }, [tab, id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function saveEdit() {
     setSaving(true);
@@ -90,7 +101,7 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
       sender_name: "Perseo",
     });
     setChatInput("");
-    api.get<ChatMessage[]>(`/api/agency/chat/${id}/messages`).then(setMessages);
+    loadMessages();
   }
 
   if (!client) return (
@@ -331,28 +342,44 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
           )}
 
           {approvals.length === 0 ? (
-            <p className="text-zinc-500 text-sm">Nenhum criativo pendente.</p>
+            <p className="text-zinc-500 text-sm">Nenhum criativo enviado ainda.</p>
           ) : (
-            approvals.map((a) => (
-              <div key={a.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex gap-4">
-                {a.thumbnail_url && (
-                  <img src={a.thumbnail_url} alt="" className="w-20 h-20 rounded-lg object-cover bg-zinc-800 shrink-0" />
-                )}
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-white">{a.title}</p>
-                  <p className="text-xs text-zinc-500 mt-0.5">{a.description}</p>
-                  {a.media_url && (
-                    <a href={a.media_url} target="_blank" rel="noopener noreferrer"
-                       className="text-xs text-violet-400 hover:underline mt-1 block">
-                      Ver mídia →
-                    </a>
+            approvals.map((a) => {
+              const statusStyle: Record<string, string> = {
+                pending:  "text-amber-400 bg-amber-500/10",
+                approved: "text-emerald-400 bg-emerald-500/10",
+                rejected: "text-red-400 bg-red-500/10",
+                revision: "text-blue-400 bg-blue-500/10",
+              };
+              const statusLabel: Record<string, string> = {
+                pending: "Aguardando", approved: "Aprovado", rejected: "Rejeitado", revision: "Revisão",
+              };
+              return (
+                <div key={a.id} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex gap-4">
+                  {a.thumbnail_url && (
+                    <img src={a.thumbnail_url} alt="" className="w-20 h-20 rounded-lg object-cover bg-zinc-800 shrink-0" />
                   )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-white">{a.title}</p>
+                    <p className="text-xs text-zinc-500 mt-0.5">{a.description}</p>
+                    {a.client_feedback && (
+                      <p className="text-xs text-zinc-400 bg-zinc-800 rounded px-2 py-1 mt-1.5">
+                        "{a.client_feedback}"
+                      </p>
+                    )}
+                    {a.media_url && (
+                      <a href={a.media_url} target="_blank" rel="noopener noreferrer"
+                         className="text-xs text-violet-400 hover:underline mt-1 block">
+                        Ver mídia →
+                      </a>
+                    )}
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 h-fit rounded-full shrink-0 ${statusStyle[a.status] ?? "text-zinc-400 bg-zinc-700"}`}>
+                    {statusLabel[a.status] ?? a.status}
+                  </span>
                 </div>
-                <span className="text-xs text-amber-400 bg-amber-500/10 px-2 py-0.5 h-fit rounded-full shrink-0">
-                  Aguardando
-                </span>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       )}

@@ -18,18 +18,24 @@ class SubmitApproval(BaseModel):
 
 @router.get("")
 def list_approvals(
-    status: str = "pending",
+    status: Optional[str] = None,
+    client_id: Optional[int] = None,
     db: _Conn = Depends(get_db),
     _=Depends(current_agency_user),
 ):
-    rows = db.execute(
-        """SELECT ca.*, c.brand, c.name as client_name
-           FROM creative_approvals ca
-           JOIN clients c ON c.id = ca.client_id
-           WHERE ca.status = %s
-           ORDER BY ca.submitted_at DESC""",
-        [status],
-    ).fetchall()
+    sql = """SELECT ca.*, c.brand, c.name as client_name
+             FROM creative_approvals ca
+             JOIN clients c ON c.id = ca.client_id
+             WHERE 1=1"""
+    params: list = []
+    if status:
+        sql += " AND ca.status = %s"
+        params.append(status)
+    if client_id:
+        sql += " AND ca.client_id = %s"
+        params.append(client_id)
+    sql += " ORDER BY ca.submitted_at DESC"
+    rows = db.execute(sql, params).fetchall()
     db.commit()
     return [dict(r) for r in rows]
 
