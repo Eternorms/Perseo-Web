@@ -91,7 +91,24 @@ def create_client(
          body.monthly_budget, body.client_email, body.client_whatsapp, body.stage],
     )
     row = cur.fetchone()
-    return {"id": row["id"]}
+    client_id = row["id"]
+
+    _DEFAULT_STAGES = [
+        ("prospect", "Prospect", "blue",    0),
+        ("active",   "Ativo",    "emerald", 1),
+        ("at_risk",  "Em Risco", "amber",   2),
+        ("paused",   "Pausado",  "zinc",    3),
+        ("churned",  "Churn",    "red",     4),
+    ]
+    for value, label, color, position in _DEFAULT_STAGES:
+        db.execute(
+            "INSERT INTO client_funnel_stages (client_id, value, label, color, position) "
+            "VALUES (%s, %s, %s, %s, %s)",
+            [client_id, value, label, color, position],
+        )
+
+    db.commit()
+    return {"id": client_id}
 
 
 class UpdateClientBody(BaseModel):

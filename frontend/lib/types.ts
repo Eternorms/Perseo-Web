@@ -90,6 +90,15 @@ export interface Task {
   created_at: string;
 }
 
+export interface FunnelStage {
+  id: number;
+  client_id: number;
+  value: string;
+  label: string;
+  color: string;
+  position: number;
+}
+
 export interface MetricCard {
   label: string;
   value: string;

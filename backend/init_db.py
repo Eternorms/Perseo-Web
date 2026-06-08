@@ -135,6 +135,15 @@ def init_web_db() -> None:
                 created_at  TIMESTAMP DEFAULT NOW(),
                 updated_at  TIMESTAMP DEFAULT NOW()
             )""",
+            """CREATE TABLE IF NOT EXISTS client_funnel_stages (
+                id         BIGSERIAL PRIMARY KEY,
+                client_id  BIGINT NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+                value      TEXT NOT NULL,
+                label      TEXT NOT NULL,
+                color      TEXT DEFAULT 'zinc',
+                position   INTEGER NOT NULL DEFAULT 0,
+                UNIQUE (client_id, value)
+            )""",
         ]
 
         for sql in tables:

@@ -1,25 +1,21 @@
 "use client";
 
 import { use, useEffect, useState, useCallback } from "react";
-import { Copy, ExternalLink, Pencil, X, Check, Plus } from "lucide-react";
+import { Copy, ExternalLink, Pencil, X, Check, Plus, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
-import { Client, CreativeApproval, ChatMessage, Task } from "@/lib/types";
+import { Client, CreativeApproval, ChatMessage, Task, FunnelStage } from "@/lib/types";
 
-const STAGE_OPTIONS = [
-  { value: "prospect", label: "Prospect" },
-  { value: "active",   label: "Ativo" },
-  { value: "at_risk",  label: "Em risco" },
-  { value: "paused",   label: "Pausado" },
-  { value: "churned",  label: "Churn" },
-];
-
-const PIPELINE_STEPS = [
-  { value: "prospect", label: "Prospect",  color: "bg-blue-500",    text: "text-blue-400" },
-  { value: "active",   label: "Ativo",     color: "bg-emerald-500", text: "text-emerald-400" },
-  { value: "at_risk",  label: "Em risco",  color: "bg-amber-500",   text: "text-amber-400" },
-  { value: "paused",   label: "Pausado",   color: "bg-zinc-500",    text: "text-zinc-400" },
-  { value: "churned",  label: "Churn",     color: "bg-red-500",     text: "text-red-400" },
-];
+const COLOR_MAP: Record<string, { bg: string; text: string; border: string }> = {
+  blue:    { bg: "bg-blue-500",    text: "text-blue-400",    border: "border-blue-500/20" },
+  emerald: { bg: "bg-emerald-500", text: "text-emerald-400", border: "border-emerald-500/20" },
+  amber:   { bg: "bg-amber-500",   text: "text-amber-400",   border: "border-amber-500/20" },
+  zinc:    { bg: "bg-zinc-500",    text: "text-zinc-400",    border: "border-zinc-500/20" },
+  red:     { bg: "bg-red-500",     text: "text-red-400",     border: "border-red-500/20" },
+  violet:  { bg: "bg-violet-500",  text: "text-violet-400",  border: "border-violet-500/20" },
+  pink:    { bg: "bg-pink-500",    text: "text-pink-400",    border: "border-pink-500/20" },
+  cyan:    { bg: "bg-cyan-500",    text: "text-cyan-400",    border: "border-cyan-500/20" },
+};
+const PALETTE = Object.keys(COLOR_MAP);
 
 const KANBAN_COLS = [
   { key: "pending",  label: "Aguardando", border: "border-amber-500/20",   text: "text-amber-400" },
@@ -38,6 +34,7 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
   const [approvals, setApprovals] = useState<CreativeApproval[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [clientTasks, setClientTasks] = useState<Task[]>([]);
+  const [funnelStages, setFunnelStages] = useState<FunnelStage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [portalToken, setPortalToken] = useState<string | null>(null);
   const [tab, setTab] = useState<"overview" | "criativos" | "chat" | "funil">("overview");
@@ -54,6 +51,12 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
   const [taskForm, setTaskForm] = useState({ title: "", priority: "medium", due_date: "" });
   const [creatingTask, setCreatingTask] = useState(false);
   const [movingStage, setMovingStage] = useState(false);
+
+  const [editingFunnel, setEditingFunnel] = useState(false);
+  const [showAddStage, setShowAddStage] = useState(false);
+  const [newStageForm, setNewStageForm] = useState({ label: "", color: "zinc" });
+  const [addingStage, setAddingStage] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   function loadApprovals() {
     api.get<CreativeApproval[]>(`/api/agency/approvals?client_id=${id}`)
@@ -73,6 +76,12 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
       .catch(console.error);
   }, [id]);
 
+  const loadFunnelStages = useCallback(() => {
+    api.get<FunnelStage[]>(`/api/agency/clients/${id}/funnel-stages`)
+      .then(setFunnelStages)
+      .catch(console.error);
+  }, [id]);
+
   useEffect(() => {
     api.get<Client>(`/api/agency/clients/${id}`).then((c) => {
       setClient(c);
@@ -81,6 +90,7 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
     loadApprovals();
     loadMessages();
     loadClientTasks();
+    loadFunnelStages();
     api.get<{ token: string }>(`/api/agency/clients/${id}/portal-token`).then((r) =>
       setPortalToken(r.token)
     );
@@ -93,8 +103,11 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
   }, [tab, id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (tab === "funil") loadClientTasks();
-  }, [tab, loadClientTasks]);
+    if (tab === "funil") {
+      loadClientTasks();
+      loadFunnelStages();
+    }
+  }, [tab, loadClientTasks, loadFunnelStages]);
 
   async function saveEdit() {
     setSaving(true);
@@ -171,6 +184,39 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
     setClientTasks((prev) => prev.filter((t) => t.id !== taskId));
   }
 
+  async function addFunnelStage() {
+    if (!newStageForm.label.trim()) return;
+    setAddingStage(true);
+    try {
+      await api.post(`/api/agency/clients/${id}/funnel-stages`, {
+        label: newStageForm.label,
+        color: newStageForm.color,
+      });
+      setNewStageForm({ label: "", color: "zinc" });
+      setShowAddStage(false);
+      loadFunnelStages();
+    } finally {
+      setAddingStage(false);
+    }
+  }
+
+  async function updateStageProp(stageId: number, updates: { label?: string; color?: string }) {
+    await api.patch(`/api/agency/clients/${id}/funnel-stages/${stageId}`, updates);
+    setFunnelStages((prev) =>
+      prev.map((s) => (s.id === stageId ? { ...s, ...updates } : s))
+    );
+  }
+
+  async function deleteFunnelStage(stageId: number) {
+    setDeleteError(null);
+    try {
+      await api.delete(`/api/agency/clients/${id}/funnel-stages/${stageId}`);
+      setFunnelStages((prev) => prev.filter((s) => s.id !== stageId));
+    } catch (err: unknown) {
+      setDeleteError(err instanceof Error ? err.message : "Erro ao excluir");
+    }
+  }
+
   if (!client) return (
     <div className="p-8 text-zinc-500 text-sm">Carregando...</div>
   );
@@ -181,9 +227,19 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
 
   const inputCls = "w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/20 transition-all";
 
-  const currentStageIdx = PIPELINE_STEPS.findIndex((s) => s.value === client.stage);
-  const nextStage = currentStageIdx >= 0 && currentStageIdx < PIPELINE_STEPS.length - 1
-    ? PIPELINE_STEPS[currentStageIdx + 1]
+  const stageOptions = funnelStages.length > 0
+    ? funnelStages
+    : [
+        { value: "prospect", label: "Prospect" },
+        { value: "active",   label: "Ativo" },
+        { value: "at_risk",  label: "Em risco" },
+        { value: "paused",   label: "Pausado" },
+        { value: "churned",  label: "Churn" },
+      ];
+
+  const currentStageIdx = funnelStages.findIndex((s) => s.value === client.stage);
+  const nextStage = currentStageIdx >= 0 && currentStageIdx < funnelStages.length - 1
+    ? funnelStages[currentStageIdx + 1]
     : null;
 
   return (
@@ -290,7 +346,7 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
                 <div>
                   <label className="text-xs text-zinc-400 block mb-1">Status</label>
                   <select value={editForm.stage ?? ""} onChange={(e) => setEditForm((f) => ({ ...f, stage: e.target.value }))} className={inputCls}>
-                    {STAGE_OPTIONS.map((o) => (
+                    {stageOptions.map((o) => (
                       <option key={o.value} value={o.value}>{o.label}</option>
                     ))}
                   </select>
@@ -341,41 +397,145 @@ export default function ClientProfilePage({ params }: { params: Promise<{ id: st
 
           {/* Pipeline steps */}
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-            <p className="text-xs text-zinc-500 uppercase tracking-widest font-medium mb-4">Estágio no pipeline</p>
-            <div className="flex items-center gap-1 mb-4">
-              {PIPELINE_STEPS.map((step, idx) => {
-                const isCurrent = step.value === client.stage;
-                const isPast = idx < currentStageIdx;
-                return (
-                  <div key={step.value} className="flex items-center flex-1 min-w-0">
-                    <button
-                      onClick={() => moveToStage(step.value)}
-                      disabled={movingStage}
-                      className={`flex-1 py-2 px-2 rounded-lg text-xs font-medium text-center transition-all ${
-                        isCurrent
-                          ? `${step.color} text-white shadow-lg scale-105`
-                          : isPast
-                          ? "bg-zinc-700/50 text-zinc-400 hover:bg-zinc-700"
-                          : "bg-zinc-800 text-zinc-600 hover:bg-zinc-700 hover:text-zinc-400"
-                      }`}
-                    >
-                      {step.label}
-                    </button>
-                    {idx < PIPELINE_STEPS.length - 1 && (
-                      <div className={`w-4 h-0.5 shrink-0 mx-0.5 ${isPast ? "bg-zinc-600" : "bg-zinc-800"}`} />
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            {nextStage && (
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-xs text-zinc-500 uppercase tracking-widest font-medium">Estágio no pipeline</p>
               <button
-                onClick={() => moveToStage(nextStage.value)}
-                disabled={movingStage}
-                className={`text-xs px-3 py-1.5 rounded-lg border border-zinc-700 transition-colors ${nextStage.text} hover:border-zinc-500 hover:text-white`}
+                onClick={() => { setEditingFunnel((v) => !v); setDeleteError(null); setShowAddStage(false); }}
+                className={`flex items-center gap-1 text-xs transition-colors ${editingFunnel ? "text-violet-400 hover:text-violet-300" : "text-zinc-500 hover:text-zinc-300"}`}
+                aria-label="Editar etapas do funil"
               >
-                {movingStage ? "Movendo..." : `Mover para ${nextStage.label} →`}
+                <Pencil size={11} />
+                {editingFunnel ? "Concluir edição" : "Editar etapas"}
               </button>
+            </div>
+
+            {!editingFunnel ? (
+              <>
+                <div className="flex items-center gap-1 mb-4">
+                  {funnelStages.map((step, idx) => {
+                    const isCurrent = step.value === client.stage;
+                    const isPast = idx < currentStageIdx;
+                    const c = COLOR_MAP[step.color] ?? COLOR_MAP.zinc;
+                    return (
+                      <div key={step.id} className="flex items-center flex-1 min-w-0">
+                        <button
+                          onClick={() => moveToStage(step.value)}
+                          disabled={movingStage}
+                          className={`flex-1 py-2 px-2 rounded-lg text-xs font-medium text-center transition-all ${
+                            isCurrent
+                              ? `${c.bg} text-white shadow-lg scale-105`
+                              : isPast
+                              ? "bg-zinc-700/50 text-zinc-400 hover:bg-zinc-700"
+                              : "bg-zinc-800 text-zinc-600 hover:bg-zinc-700 hover:text-zinc-400"
+                          }`}
+                        >
+                          {step.label}
+                        </button>
+                        {idx < funnelStages.length - 1 && (
+                          <div className={`w-4 h-0.5 shrink-0 mx-0.5 ${isPast ? "bg-zinc-600" : "bg-zinc-800"}`} />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {nextStage && (
+                  <button
+                    onClick={() => moveToStage(nextStage.value)}
+                    disabled={movingStage}
+                    className={`text-xs px-3 py-1.5 rounded-lg border border-zinc-700 transition-colors ${(COLOR_MAP[nextStage.color] ?? COLOR_MAP.zinc).text} hover:border-zinc-500 hover:text-white`}
+                  >
+                    {movingStage ? "Movendo..." : `Mover para ${nextStage.label} →`}
+                  </button>
+                )}
+              </>
+            ) : (
+              <div className="space-y-2">
+                {funnelStages.map((step) => {
+                  const c = COLOR_MAP[step.color] ?? COLOR_MAP.zinc;
+                  const isCurrent = step.value === client.stage;
+                  return (
+                    <div key={step.id} className="flex items-center gap-2 p-2 rounded-lg bg-zinc-800/50">
+                      <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${c.bg}`} />
+                      <input
+                        defaultValue={step.label}
+                        onBlur={(e) => {
+                          const newLabel = e.target.value.trim();
+                          if (newLabel && newLabel !== step.label) {
+                            updateStageProp(step.id, { label: newLabel });
+                          }
+                        }}
+                        className="flex-1 bg-transparent text-sm text-white focus:outline-none focus:border-b focus:border-zinc-600 min-w-0"
+                      />
+                      <div className="flex items-center gap-1">
+                        {PALETTE.map((color) => (
+                          <button
+                            key={color}
+                            onClick={() => updateStageProp(step.id, { color })}
+                            className={`w-4 h-4 rounded-full ${COLOR_MAP[color].bg} transition-transform ${step.color === color ? "ring-2 ring-white ring-offset-1 ring-offset-zinc-800 scale-110" : "opacity-60 hover:opacity-100"}`}
+                            aria-label={color}
+                          />
+                        ))}
+                      </div>
+                      <button
+                        onClick={() => deleteFunnelStage(step.id)}
+                        disabled={isCurrent}
+                        title={isCurrent ? "Não é possível excluir a etapa atual" : "Excluir etapa"}
+                        className="text-zinc-600 hover:text-red-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors ml-1"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  );
+                })}
+
+                {deleteError && (
+                  <p className="text-xs text-red-400 px-2">{deleteError}</p>
+                )}
+
+                {showAddStage ? (
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-800/50 border border-zinc-700">
+                    <input
+                      autoFocus
+                      value={newStageForm.label}
+                      onChange={(e) => setNewStageForm((f) => ({ ...f, label: e.target.value }))}
+                      onKeyDown={(e) => e.key === "Enter" && addFunnelStage()}
+                      placeholder="Nome da etapa"
+                      className="flex-1 bg-transparent text-sm text-white placeholder-zinc-600 focus:outline-none min-w-0"
+                    />
+                    <div className="flex items-center gap-1">
+                      {PALETTE.map((color) => (
+                        <button
+                          key={color}
+                          onClick={() => setNewStageForm((f) => ({ ...f, color }))}
+                          className={`w-4 h-4 rounded-full ${COLOR_MAP[color].bg} transition-transform ${newStageForm.color === color ? "ring-2 ring-white ring-offset-1 ring-offset-zinc-800 scale-110" : "opacity-60 hover:opacity-100"}`}
+                          aria-label={color}
+                        />
+                      ))}
+                    </div>
+                    <button
+                      onClick={addFunnelStage}
+                      disabled={addingStage || !newStageForm.label.trim()}
+                      className="text-emerald-400 hover:text-emerald-300 disabled:opacity-30 transition-colors"
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      onClick={() => { setShowAddStage(false); setNewStageForm({ label: "", color: "zinc" }); }}
+                      className="text-zinc-500 hover:text-zinc-300 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowAddStage(true)}
+                    className="flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300 px-2 py-1.5 transition-colors"
+                  >
+                    <Plus size={12} />
+                    Adicionar etapa
+                  </button>
+                )}
+              </div>
             )}
           </div>
 
