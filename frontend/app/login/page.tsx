@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -17,7 +15,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await api.post("/api/auth/login", { email, password });
-      router.push("/agency/dashboard");
+      window.location.replace("/agency/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Erro ao fazer login");
     } finally {

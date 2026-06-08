@@ -61,6 +61,7 @@ def setup_first_admin(body: CreateUserBody, db: _Conn = Depends(get_db)):
     return {"ok": True}
 
 
+
 @router.post("/users", status_code=201)
 def create_user(body: CreateUserBody, db: _Conn = Depends(get_db), user: dict = Depends(current_agency_user)):
     if user["role"] != "admin":
