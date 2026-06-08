@@ -86,10 +86,10 @@ export default function AgencyLayout({ children }: { children: React.ReactNode }
           <div className="flex items-center gap-2.5 mb-3">
             <div className="w-7 h-7 rounded-full bg-violet-600/20 border border-violet-600/30 flex items-center justify-center shrink-0">
               <span className="text-violet-400 text-xs font-semibold select-none">
-                {user.name.charAt(0).toUpperCase()}
+                {(user.name ?? "A").charAt(0).toUpperCase()}
               </span>
             </div>
-            <p className="text-xs text-zinc-300 truncate flex-1">{user.name}</p>
+            <p className="text-xs text-zinc-300 truncate flex-1">{user.name ?? "Admin"}</p>
           </div>
           <button
             onClick={logout}
