@@ -23,6 +23,18 @@ def init_web_db() -> None:
 
         conn.execute("CREATE SCHEMA IF NOT EXISTS perseo")
 
+        # Garante que a tabela businesses existe (pode não existir se init_db do desktop nunca rodou)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS businesses (
+                id          BIGSERIAL PRIMARY KEY,
+                name        TEXT NOT NULL,
+                type        TEXT NOT NULL,
+                description TEXT,
+                active      INTEGER DEFAULT 1,
+                created_at  TEXT DEFAULT (NOW()::TEXT)
+            )
+        """)
+
         # Garante que o negócio Perseo existe
         row = conn.execute(
             "SELECT COUNT(*) as n FROM businesses WHERE active = 1"

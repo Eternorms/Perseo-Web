@@ -106,13 +106,15 @@ export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [showModal, setShowModal] = useState(false);
 
   function loadClients() {
     setLoading(true);
+    setLoadError("");
     api.get<Client[]>("/api/agency/clients")
       .then(setClients)
-      .catch(console.error)
+      .catch((e) => setLoadError(e instanceof Error ? e.message : "Erro ao carregar clientes"))
       .finally(() => setLoading(false));
   }
 
@@ -153,6 +155,9 @@ export default function ClientsPage() {
         </div>
       </div>
 
+      {loadError && (
+        <p className="text-red-400 text-sm font-mono bg-zinc-900 border border-red-800/40 rounded px-4 py-3">{loadError}</p>
+      )}
       {loading ? (
         <p className="text-zinc-500 text-sm">Carregando...</p>
       ) : filtered.length === 0 ? (
