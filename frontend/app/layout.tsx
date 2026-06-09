@@ -14,7 +14,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Perseo Agency",
-  description: "Plataforma de gestão e portal de clientes",
+  description: "Perseo Agency — Gestão de tráfego e criativos para clínicas.",
+  metadataBase: new URL('https://perseoagency.net'),
+  other: {
+    "facebook-domain-verification": "2mbnl3onqm0mohiv4p3zgqlg4evh3x",
+  },
 };
 
 export default function RootLayout({
@@ -24,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="pt-BR"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
