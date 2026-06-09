@@ -10,6 +10,7 @@ interface Props {
 
 const baseItems = [
   { href: '/client/dashboard', label: 'Dashboard' },
+  { href: '/client/criativos', label: 'Criativos' },
   { href: '/client/appointments', label: 'Agendamentos' },
   { href: '/client/messages', label: 'Mensagens' },
 ]
