@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 interface Props {
   name: string
   isOwner: boolean
+  pendingCreatives?: number
   logout: () => Promise<void>
 }
 
@@ -20,7 +21,7 @@ const ownerItems = [
   { href: '/client/settings', label: 'Configurações' },
 ]
 
-export default function ClientSidebar({ name, isOwner, logout }: Props) {
+export default function ClientSidebar({ name, isOwner, pendingCreatives = 0, logout }: Props) {
   const pathname = usePathname()
   const items = isOwner ? [...baseItems, ...ownerItems] : baseItems
 
@@ -33,17 +34,23 @@ export default function ClientSidebar({ name, isOwner, logout }: Props) {
       <nav className="flex-1 flex flex-col gap-0.5">
         {items.map(item => {
           const active = pathname === item.href || (item.href !== '/client/dashboard' && pathname.startsWith(item.href))
+          const badge = item.href === '/client/criativos' && pendingCreatives > 0 ? pendingCreatives : 0
           return (
             <a
               key={item.href}
               href={item.href}
-              className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+              className={`px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between ${
                 active
                   ? 'bg-neutral-800 text-white font-medium'
                   : 'text-neutral-400 hover:text-white hover:bg-neutral-800/60'
               }`}
             >
               {item.label}
+              {badge > 0 && (
+                <span className="text-xs bg-amber-500 text-black font-semibold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center">
+                  {badge}
+                </span>
+              )}
             </a>
           )
         })}

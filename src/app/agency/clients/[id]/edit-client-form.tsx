@@ -17,6 +17,7 @@ export default function EditClientForm({ client }: Props) {
     e.preventDefault()
     const fd = new FormData(e.currentTarget)
     startTransition(async () => {
+      const perseoRaw = fd.get('perseo_client_id') as string
       const result = await updateClientAction(client.id, {
         business_name: fd.get('business_name') as string,
         name: fd.get('name') as string,
@@ -27,8 +28,11 @@ export default function EditClientForm({ client }: Props) {
         whatsapp_phone: fd.get('whatsapp_phone') as string,
         meta_page_id: fd.get('meta_page_id') as string,
         meta_form_id: fd.get('meta_form_id') as string,
+        ig_page_id: fd.get('ig_page_id') as string,
+        meta_token: fd.get('meta_token') as string,
         agent_prompt: fd.get('agent_prompt') as string,
         agent_active: fd.get('agent_active') === 'on',
+        perseo_client_id: perseoRaw ? Number(perseoRaw) : null,
       })
       if (result.error) {
         setError(result.error)
@@ -66,9 +70,23 @@ export default function EditClientForm({ client }: Props) {
 
       <Section title="Meta Ads">
         <div className="grid grid-cols-2 gap-4">
-          <Field label="Page ID" name="meta_page_id" defaultValue={client.meta_page_id ?? ''} />
+          <Field label="Page ID (formulários de lead)" name="meta_page_id" defaultValue={client.meta_page_id ?? ''} />
           <Field label="Form ID" name="meta_form_id" defaultValue={client.meta_form_id ?? ''} />
+          <Field label="Instagram Page ID (publicações)" name="ig_page_id" defaultValue={client.ig_page_id ?? ''} placeholder="ID da página do Instagram" />
+          <Field label="Meta Access Token (publicações)" name="meta_token" defaultValue={client.meta_token ?? ''} placeholder="Token de acesso à API" />
         </div>
+      </Section>
+
+      <Section title="App Produto (produção de criativos)">
+        <Field
+          label="ID do cliente no App Produto (perseo.clients.id)"
+          name="perseo_client_id"
+          defaultValue={client.perseo_client_id != null ? String(client.perseo_client_id) : ''}
+          placeholder="Ex: 1 — ID gerado pelo App Produto ao cadastrar o cliente"
+        />
+        <p className="text-xs text-neutral-600 mt-1">
+          Necessário para o portal de criativos do cliente funcionar. Encontre o ID no App Produto (lista de clientes).
+        </p>
       </Section>
 
       <Section title="Agente de IA">

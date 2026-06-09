@@ -9,7 +9,8 @@ export async function decideCreativeAction(
   status: 'approved' | 'rejected' | 'revision',
   feedback?: string
 ) {
-  const { clientId } = await getClientContext()
+  const { perseoClientId } = await getClientContext()
+  if (!perseoClientId) return { error: 'Conta não vinculada ao sistema de produção.' }
 
   const admin = createAdminClient()
 
@@ -22,25 +23,38 @@ export async function decideCreativeAction(
       decided_at: new Date().toISOString(),
     })
     .eq('id', approvalId)
-    .eq('client_id', clientId)
+    .eq('client_id', perseoClientId)
     .select('title, scheduled_at')
     .single()
 
   if (error || !appr) return { error: 'Criativo não encontrado.' }
 
+  const title = appr.title ?? 'Criativo'
+
   if (status === 'approved') {
     const schedInfo = appr.scheduled_at
       ? ` Agendado para ${new Date(appr.scheduled_at).toLocaleDateString('pt-BR')}.`
       : ''
-    await admin
-      .schema('perseo')
-      .from('notifications')
-      .insert({
-        client_id: clientId,
-        type: 'creative_approved',
-        title: `Criativo aprovado: ${appr.title ?? ''}`,
-        body: `O cliente aprovou o criativo.${schedInfo}`,
-      })
+    await admin.schema('perseo').from('notifications').insert({
+      client_id: perseoClientId,
+      type: 'creative_approved',
+      title: `Criativo aprovado: ${title}`,
+      body: `O cliente aprovou o criativo.${schedInfo}`,
+    })
+  } else if (status === 'revision') {
+    await admin.schema('perseo').from('notifications').insert({
+      client_id: perseoClientId,
+      type: 'creative_revision',
+      title: `Revisão solicitada: ${title}`,
+      body: feedback ? `Feedback: ${feedback}` : 'O cliente solicitou ajustes.',
+    })
+  } else if (status === 'rejected') {
+    await admin.schema('perseo').from('notifications').insert({
+      client_id: perseoClientId,
+      type: 'creative_rejected',
+      title: `Criativo rejeitado: ${title}`,
+      body: feedback ? `Motivo: ${feedback}` : 'O cliente rejeitou o criativo.',
+    })
   }
 
   revalidatePath('/client/criativos')

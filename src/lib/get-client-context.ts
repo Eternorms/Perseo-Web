@@ -14,5 +14,16 @@ export async function getClientContext() {
 
   if (!appUser?.client_id) redirect('/onboarding')
 
-  return { supabase, appUser, clientId: appUser.client_id as string }
+  const { data: clientRow } = await supabase
+    .from('clients')
+    .select('perseo_client_id')
+    .eq('id', appUser.client_id)
+    .single()
+
+  return {
+    supabase,
+    appUser,
+    clientId: appUser.client_id as string,
+    perseoClientId: (clientRow?.perseo_client_id ?? null) as number | null,
+  }
 }

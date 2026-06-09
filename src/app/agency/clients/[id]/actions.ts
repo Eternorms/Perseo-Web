@@ -14,8 +14,11 @@ export interface UpdateClientData {
   whatsapp_phone: string
   meta_page_id: string
   meta_form_id: string
+  ig_page_id: string
+  meta_token: string
   agent_prompt: string
   agent_active: boolean
+  perseo_client_id: number | null
 }
 
 export async function updateClientAction(id: string, data: UpdateClientData) {
@@ -31,8 +34,11 @@ export async function updateClientAction(id: string, data: UpdateClientData) {
     whatsapp_phone: data.whatsapp_phone || null,
     meta_page_id: data.meta_page_id || null,
     meta_form_id: data.meta_form_id || null,
+    ig_page_id: data.ig_page_id || null,
+    meta_token: data.meta_token || null,
     agent_prompt: data.agent_prompt || null,
     agent_active: data.agent_active,
+    perseo_client_id: data.perseo_client_id ?? null,
     updated_at: new Date().toISOString(),
   }).eq('id', id)
 

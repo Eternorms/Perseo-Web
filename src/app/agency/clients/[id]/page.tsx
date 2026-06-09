@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { type Client, type Lead, type Appointment, type AgentAction } from '@/types'
 import ClientTabs from './client-tabs'
 import InviteClientModal from './invite-client-modal'
@@ -22,6 +23,8 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   const { id } = await params
   const supabase = await createClient()
 
+  const admin = createAdminClient()
+
   const [{ data: client }, { data: leads }, { data: appointments }, { data: agentActions }] = await Promise.all([
     supabase.from('clients').select('*').eq('id', id).single(),
     supabase.from('leads').select('*').eq('client_id', id).order('created_at', { ascending: false }),
@@ -32,6 +35,15 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   if (!client) notFound()
 
   const c = client as Client
+
+  // Busca criativos do perseo_client_id correspondente
+  const perseoId = c.perseo_client_id ?? null
+  const { data: approvals } = perseoId
+    ? await admin.schema('perseo').from('creative_approvals')
+        .select('id, title, status, client_feedback, submitted_at, scheduled_at, media_url')
+        .eq('client_id', perseoId)
+        .order('submitted_at', { ascending: false })
+    : { data: [] }
 
   return (
     <div className="p-8 space-y-6">
@@ -79,6 +91,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         leads={(leads as Lead[]) ?? []}
         appointments={(appointments as Appointment[]) ?? []}
         agentActions={(agentActions as AgentAction[]) ?? []}
+        approvals={(approvals ?? []) as any}
       />
     </div>
   )

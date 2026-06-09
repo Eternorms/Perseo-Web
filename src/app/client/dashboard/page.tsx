@@ -1,4 +1,6 @@
+import Link from 'next/link'
 import { getClientContext } from '@/lib/get-client-context'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { type Client, type Lead, type Appointment } from '@/types'
 
 const leadStatusColor: Record<string, string> = {
@@ -26,17 +28,20 @@ const apptStatusLabel: Record<string, string> = {
 }
 
 export default async function ClientDashboardPage() {
-  const { supabase, clientId } = await getClientContext()
+  const { supabase, clientId, perseoClientId } = await getClientContext()
 
   const now = new Date()
   const weekAgo = new Date(now.getTime() - 7 * 86400000)
   const weekAhead = new Date(now.getTime() + 7 * 86400000)
+
+  const admin = createAdminClient()
 
   const [
     { data: client },
     { data: allLeads },
     { data: recentLeads },
     { data: upcomingAppts },
+    { count: pendingCreatives },
   ] = await Promise.all([
     supabase.from('clients').select('*').eq('id', clientId).single(),
     supabase.from('leads').select('status, created_at').eq('client_id', clientId),
@@ -45,6 +50,12 @@ export default async function ClientDashboardPage() {
       .gte('scheduled_at', now.toISOString())
       .lte('scheduled_at', weekAhead.toISOString())
       .order('scheduled_at').limit(3),
+    perseoClientId
+      ? admin.schema('perseo').from('creative_approvals')
+          .select('*', { count: 'exact', head: true })
+          .eq('client_id', perseoClientId)
+          .eq('status', 'pending')
+      : Promise.resolve({ count: 0 }),
   ])
 
   const c = client as Client
@@ -60,6 +71,19 @@ export default async function ClientDashboardPage() {
         <h1 className="text-lg font-semibold text-white">{c?.business_name ?? 'Dashboard'}</h1>
         <p className="text-sm text-neutral-500 mt-0.5">Visão geral da sua clínica</p>
       </div>
+
+      {/* Banner de criativos pendentes */}
+      {(pendingCreatives ?? 0) > 0 && (
+        <Link href="/client/criativos" className="flex items-center justify-between bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3 hover:bg-amber-500/15 transition-colors">
+          <div>
+            <p className="text-sm font-medium text-amber-300">
+              {pendingCreatives} criativo{(pendingCreatives ?? 0) > 1 ? 's' : ''} aguardando sua aprovação
+            </p>
+            <p className="text-xs text-amber-500 mt-0.5">Clique para revisar e aprovar</p>
+          </div>
+          <span className="text-amber-400 text-lg">→</span>
+        </Link>
+      )}
 
       <div className="grid grid-cols-3 gap-3">
         <Stat label="Leads esta semana" value={leadsThisWeek} />
