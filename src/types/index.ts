@@ -28,7 +28,10 @@ export interface Client {
   whatsapp_phone: string | null
   meta_page_id: string | null
   meta_form_id: string | null
+  ig_page_id: string | null
+  meta_token: string | null
   calendar_id: string | null
+  perseo_client_id: number | null
   agent_prompt: string | null
   agent_active: boolean
   plan: string

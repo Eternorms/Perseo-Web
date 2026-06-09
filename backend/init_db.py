@@ -152,8 +152,9 @@ def init_web_db() -> None:
         for alter in [
             "ALTER TABLE creative_approvals ADD COLUMN IF NOT EXISTS scheduled_at TIMESTAMP",
             "ALTER TABLE creative_approvals ADD COLUMN IF NOT EXISTS meta_post_id TEXT",
-            # Bridge entre public.clients (portal Supabase) e perseo.clients (App Produto)
             "ALTER TABLE clients ADD COLUMN IF NOT EXISTS perseo_client_id BIGINT",
+            "ALTER TABLE clients ADD COLUMN IF NOT EXISTS ig_page_id TEXT",
+            "ALTER TABLE clients ADD COLUMN IF NOT EXISTS meta_token TEXT",
         ]:
             conn.execute(alter)
 
