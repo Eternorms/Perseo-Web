@@ -15,8 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Perseo Agency",
   description: "Perseo Agency — Gestão de tráfego e criativos para clínicas.",
+  metadataBase: new URL('https://perseoagency.net'),
   other: {
-    "facebook-domain-verification": "rah6roquii680xwox5so1ottpfzdb2",
+    "facebook-domain-verification": "2mbnl3onqm0mohiv4p3zgqlg4evh3x",
   },
 };
 
