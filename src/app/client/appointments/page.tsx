@@ -1,95 +1,99 @@
-import { getClientContext } from '@/lib/get-client-context'
-import { type Appointment } from '@/types'
-import AppointmentsFilter from './filter'
+import type { Metadata } from "next";
+import { CalendarDays } from "lucide-react";
+import { requireClient } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
+import { fmtDateTime } from "@/lib/format";
+import { APPOINTMENT_STATUS } from "@/lib/labels";
+import { PageHeader } from "@/components/kit/page-header";
+import { EmptyState } from "@/components/kit/empty-state";
+import { StatusBadge } from "@/components/kit/status-badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AppointmentClientActions } from "@/components/client/appointment-actions";
 
-export default async function ClientAppointmentsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ status?: string }>
-}) {
-  const { supabase, clientId } = await getClientContext()
-  const { status } = await searchParams
+export const metadata: Metadata = { title: "Agendamentos" };
 
-  let query = supabase
-    .from('appointments')
-    .select('*')
-    .eq('client_id', clientId)
-    .order('scheduled_at', { ascending: false })
+export default async function ClientAppointmentsPage() {
+  const { client } = await requireClient();
+  const supabase = await createClient();
 
-  if (status && status !== 'all') {
-    query = query.eq('status', status)
-  }
+  const now = new Date().toISOString();
+  const [upcomingQ, pastQ] = await Promise.all([
+    supabase
+      .from("appointments")
+      .select("*")
+      .eq("client_id", client.id)
+      .gte("scheduled_at", now)
+      .order("scheduled_at", { ascending: true }),
+    supabase
+      .from("appointments")
+      .select("*")
+      .eq("client_id", client.id)
+      .lt("scheduled_at", now)
+      .order("scheduled_at", { ascending: false })
+      .limit(30),
+  ]);
 
-  const { data: appointments } = await query
+  const upcoming = upcomingQ.data ?? [];
+  const past = pastQ.data ?? [];
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold text-white">Agendamentos</h1>
-          <p className="text-sm text-neutral-500 mt-0.5">{appointments?.length ?? 0} registros</p>
-        </div>
-        <AppointmentsFilter current={status ?? 'all'} />
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        title="Agendamentos"
+        subtitle="Confirme ou cancele — a agência e o agente de IA são avisados na hora."
+      />
 
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
-        {!appointments || appointments.length === 0 ? (
-          <div className="p-12 text-center">
-            <p className="text-neutral-500 text-sm">Nenhum agendamento encontrado.</p>
-          </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-neutral-800">
-                <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Paciente</th>
-                <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Data/Hora</th>
-                <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Status</th>
-                <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Notas</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(appointments as Appointment[]).map((a, i) => (
-                <tr key={a.id} className={i < appointments.length - 1 ? 'border-b border-neutral-800/50' : ''}>
-                  <td className="px-4 py-3">
-                    <p className="text-white font-medium">{a.patient_name}</p>
-                    {a.patient_phone && <p className="text-xs text-neutral-500">{a.patient_phone}</p>}
-                  </td>
-                  <td className="px-4 py-3 text-neutral-400">
-                    {new Date(a.scheduled_at).toLocaleDateString('pt-BR')}{' '}
-                    <span className="text-neutral-500">
-                      {new Date(a.scheduled_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={a.status} />
-                  </td>
-                  <td className="px-4 py-3 text-neutral-500 text-xs">{a.notes ?? '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Próximos</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2 p-3">
+          {upcoming.length === 0 ? (
+            <EmptyState
+              icon={CalendarDays}
+              title="Nenhum agendamento futuro"
+              description="Quando seus leads agendarem, os horários aparecem aqui para você confirmar."
+              className="border-0 py-10"
+            />
+          ) : (
+            upcoming.map((a) => (
+              <div key={a.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-line p-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-ink">{a.patient_name}</p>
+                  <p className="num text-[11px] text-ink-faint">
+                    {fmtDateTime(a.scheduled_at)}
+                    {a.patient_phone ? ` · ${a.patient_phone}` : ""}
+                  </p>
+                  {a.notes ? <p className="mt-1 text-[11px] text-ink-mute">{a.notes}</p> : null}
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <StatusBadge def={APPOINTMENT_STATUS[a.status]} />
+                  <AppointmentClientActions appointmentId={a.id} clientId={client.id} status={a.status} />
+                </div>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      {past.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Histórico</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-1 p-2">
+            {past.map((a) => (
+              <div key={a.id} className="flex items-center justify-between gap-3 rounded-md px-2.5 py-2">
+                <div className="min-w-0">
+                  <p className="truncate text-[13px] text-ink-mute">{a.patient_name}</p>
+                  <p className="num text-[11px] text-ink-faint">{fmtDateTime(a.scheduled_at)}</p>
+                </div>
+                <StatusBadge def={APPOINTMENT_STATUS[a.status]} />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : null}
     </div>
-  )
-}
-
-const statusColor: Record<string, string> = {
-  scheduled: 'bg-blue-500/15 text-blue-400',
-  confirmed: 'bg-emerald-500/15 text-emerald-400',
-  cancelled: 'bg-red-500/15 text-red-400',
-  completed: 'bg-neutral-500/15 text-neutral-400',
-  no_show: 'bg-orange-500/15 text-orange-400',
-}
-const statusLabel: Record<string, string> = {
-  scheduled: 'Agendado', confirmed: 'Confirmado', cancelled: 'Cancelado',
-  completed: 'Realizado', no_show: 'Faltou',
-}
-
-function StatusBadge({ status }: { status: string }) {
-  return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[status] ?? 'bg-neutral-700 text-neutral-300'}`}>
-      {statusLabel[status] ?? status}
-    </span>
-  )
+  );
 }

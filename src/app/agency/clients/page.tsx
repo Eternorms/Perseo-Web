@@ -1,115 +1,108 @@
-import { createClient } from '@/lib/supabase/server'
-import { type Client } from '@/types'
-import { MOCK_CLIENTS } from '@/lib/mock-data'
-import NewClientModal from './new-client-modal'
-import ClientsFilter from './filter'
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Users } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { requireAgency } from "@/lib/auth";
+import { fmtCurrency, fmtDate } from "@/lib/format";
+import { CLIENT_STATUS, SERVICE_LABEL } from "@/lib/labels";
+import { PageHeader } from "@/components/kit/page-header";
+import { EmptyState } from "@/components/kit/empty-state";
+import { StatusBadge } from "@/components/kit/status-badge";
+import { Card } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Avatar } from "@/components/ui/avatar";
+import { NewClientDialog } from "@/components/agency/new-client-dialog";
+import { ClientsFilter } from "@/components/agency/clients-filter";
+import type { ClientStatus } from "@/types/database";
 
-const statusColor: Record<string, string> = {
-  active: 'bg-emerald-500/15 text-emerald-400',
-  onboarding: 'bg-amber-500/15 text-amber-400',
-  paused: 'bg-neutral-500/15 text-neutral-400',
-  churned: 'bg-red-500/15 text-red-400',
-}
-const statusLabel: Record<string, string> = {
-  active: 'Ativo', onboarding: 'Onboarding', paused: 'Pausado', churned: 'Churn',
-}
-const planLabel: Record<string, string> = {
-  starter: 'Starter', growth: 'Growth', scale: 'Scale',
-}
+export const metadata: Metadata = { title: "Clientes" };
+
+const STATUS_VALUES: ClientStatus[] = ["onboarding", "active", "paused", "churned"];
 
 export default async function ClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>
+  searchParams: Promise<{ q?: string; status?: string }>;
 }) {
-  const { status } = await searchParams
-  const currentFilter = status ?? 'all'
+  await requireAgency();
+  const params = await searchParams;
+  const q = (params.q ?? "").trim();
+  const status = STATUS_VALUES.includes(params.status as ClientStatus) ? (params.status as ClientStatus) : null;
 
-  const supabase = await createClient()
-  let query = supabase.from('clients').select('*').order('created_at', { ascending: false })
-  if (currentFilter !== 'all') {
-    query = query.eq('status', currentFilter)
-  }
-  const { data: realClients } = await query
+  const supabase = await createClient();
+  let query = supabase.from("clients").select("*").order("created_at", { ascending: false });
+  if (q) query = query.or(`name.ilike.%${q}%,business_name.ilike.%${q}%,contact_email.ilike.%${q}%`);
+  if (status) query = query.eq("status", status);
+  const { data: clients } = await query;
 
-  const useMock = !realClients || realClients.length === 0
-  const allClients = useMock ? MOCK_CLIENTS : (realClients as Client[])
-  const clients = (currentFilter !== 'all' && useMock)
-    ? allClients.filter(c => c.status === currentFilter)
-    : allClients
+  const rows = clients ?? [];
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold text-white">Clientes</h1>
-          <p className="text-sm text-neutral-500 mt-0.5">
-            {clients.length} {currentFilter === 'all' ? 'clientes cadastrados' : statusLabel[currentFilter]?.toLowerCase() + 's'}
-          </p>
-        </div>
-        <NewClientModal />
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        title="Clientes"
+        subtitle={`${rows.length} conta${rows.length === 1 ? "" : "s"}${status ? ` · ${CLIENT_STATUS[status].label}` : ""}`}
+        actions={<NewClientDialog />}
+      />
 
-      <ClientsFilter current={currentFilter} />
+      <ClientsFilter q={q} status={status ?? ""} />
 
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
-        {clients.length === 0 ? (
-          <div className="p-12 text-center">
-            <p className="text-neutral-500 text-sm">Nenhum cliente neste filtro.</p>
-            <p className="text-neutral-600 text-xs mt-1">Clique em "Novo cliente" para começar.</p>
-          </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-neutral-800">
-                <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Clínica</th>
-                <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Nicho</th>
-                <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Plano</th>
-                <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Agente</th>
-                <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Status</th>
-                <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Desde</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody>
-              {clients.map((c, i) => (
-                <tr
-                  key={c.id}
-                  className={`hover:bg-neutral-800/40 transition-colors ${i < clients.length - 1 ? 'border-b border-neutral-800/50' : ''}`}
-                >
-                  <td className="px-4 py-3">
-                    <p className="text-white font-medium">{c.business_name}</p>
-                    <p className="text-xs text-neutral-500">{c.contact_name ?? c.name}</p>
-                  </td>
-                  <td className="px-4 py-3 text-neutral-400">{c.niche ?? '—'}</td>
-                  <td className="px-4 py-3 text-neutral-400">{planLabel[c.plan] ?? c.plan}</td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs font-medium ${c.agent_active ? 'text-emerald-400' : 'text-neutral-600'}`}>
-                      {c.agent_active ? '● Ativo' : '○ Inativo'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColor[c.status] ?? 'bg-neutral-700 text-neutral-300'}`}>
-                      {statusLabel[c.status] ?? c.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-neutral-500 text-xs">
-                    {new Date(c.created_at).toLocaleDateString('pt-BR')}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <a
-                      href={`/agency/clients/${c.id}`}
-                      className="text-xs text-neutral-500 hover:text-white transition-colors"
-                    >
-                      Ver →
-                    </a>
-                  </td>
-                </tr>
+      {rows.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title={q || status ? "Nenhum cliente nesse filtro" : "Nenhum cliente ainda"}
+          description={
+            q || status
+              ? "Ajuste a busca ou limpe os filtros."
+              : "Crie o primeiro cliente ou aguarde a captura de leads da landing — eles entram aqui em onboarding."
+          }
+        />
+      ) : (
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Serviços</TableHead>
+                <TableHead className="text-right">Mensalidade</TableHead>
+                <TableHead>Contato</TableHead>
+                <TableHead className="text-right">Desde</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell>
+                    <Link href={`/agency/clients/${c.id}`} className="flex items-center gap-2.5 font-medium text-ink hover:text-neon">
+                      <Avatar name={c.name} tone={c.status === "active" ? "neon" : "default"} />
+                      <span>
+                        {c.name}
+                        <span className="block text-[11px] font-normal text-ink-faint">{c.niche ?? "—"}</span>
+                      </span>
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge def={CLIENT_STATUS[c.status]} />
+                    {c.status === "onboarding" ? (
+                      <span className="num ml-2 text-[10px] text-ink-faint">step {c.onboarding_step}/7</span>
+                    ) : null}
+                  </TableCell>
+                  <TableCell className="text-ink-mute">
+                    {(c.services ?? []).map((s) => SERVICE_LABEL[s] ?? s).join(" + ") || "—"}
+                  </TableCell>
+                  <TableCell className="num text-right">{fmtCurrency(c.monthly_value)}</TableCell>
+                  <TableCell>
+                    <span className="block text-ink-mute">{c.contact_name ?? "—"}</span>
+                    <span className="block text-[11px] text-ink-faint">{c.contact_email ?? ""}</span>
+                  </TableCell>
+                  <TableCell className="num text-right text-ink-mute">{fmtDate(c.created_at)}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+            </TableBody>
+          </Table>
+        </Card>
+      )}
     </div>
-  )
+  );
 }

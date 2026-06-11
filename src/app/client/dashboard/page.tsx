@@ -1,175 +1,151 @@
-import Link from 'next/link'
-import { getClientContext } from '@/lib/get-client-context'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { type Client, type Lead, type Appointment } from '@/types'
+import type { Metadata } from "next";
+import Link from "next/link";
+import { CalendarDays, Clapperboard, UserPlus } from "lucide-react";
+import { requireClient } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
+import { fetchCreativesForPerseoClient } from "@/lib/data/creatives";
+import { deltaPct } from "@/lib/metrics";
+import { fmtDateTime, fmtNumber, fmtPercent, fmtRelative } from "@/lib/format";
+import { APPOINTMENT_STATUS, LEAD_STATUS } from "@/lib/labels";
+import { PageHeader } from "@/components/kit/page-header";
+import { MetricCard } from "@/components/kit/metric-card";
+import { EmptyState } from "@/components/kit/empty-state";
+import { StatusBadge } from "@/components/kit/status-badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const leadStatusColor: Record<string, string> = {
-  new: 'bg-blue-500/15 text-blue-400',
-  contacted: 'bg-amber-500/15 text-amber-400',
-  qualified: 'bg-purple-500/15 text-purple-400',
-  scheduled: 'bg-emerald-500/15 text-emerald-400',
-  converted: 'bg-emerald-700/20 text-emerald-300',
-  lost: 'bg-red-500/15 text-red-400',
-}
-const leadStatusLabel: Record<string, string> = {
-  new: 'Novo', contacted: 'Contactado', qualified: 'Qualificado',
-  scheduled: 'Agendado', converted: 'Convertido', lost: 'Perdido',
-}
-const apptStatusColor: Record<string, string> = {
-  scheduled: 'bg-blue-500/15 text-blue-400',
-  confirmed: 'bg-emerald-500/15 text-emerald-400',
-  cancelled: 'bg-red-500/15 text-red-400',
-  completed: 'bg-neutral-500/15 text-neutral-400',
-  no_show: 'bg-orange-500/15 text-orange-400',
-}
-const apptStatusLabel: Record<string, string> = {
-  scheduled: 'Agendado', confirmed: 'Confirmado', cancelled: 'Cancelado',
-  completed: 'Realizado', no_show: 'Faltou',
-}
+export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function ClientDashboardPage() {
-  const { supabase, clientId, perseoClientId } = await getClientContext()
+  const { client } = await requireClient();
+  const supabase = await createClient();
 
-  const now = new Date()
-  const weekAgo = new Date(now.getTime() - 7 * 86400000)
-  const weekAhead = new Date(now.getTime() + 7 * 86400000)
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 864e5).toISOString();
+  const twoWeeksAgo = new Date(now.getTime() - 14 * 864e5).toISOString();
+  const monthAgo = new Date(now.getTime() - 30 * 864e5).toISOString();
 
-  const admin = createAdminClient()
+  const [leadsWeekQ, leadsPrevQ, leads30Q, apptsQ, recentLeadsQ, pendingCreatives] = await Promise.all([
+    supabase.from("leads").select("id", { count: "exact", head: true }).eq("client_id", client.id).gte("created_at", weekAgo),
+    supabase
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .eq("client_id", client.id)
+      .gte("created_at", twoWeeksAgo)
+      .lt("created_at", weekAgo),
+    supabase.from("leads").select("status").eq("client_id", client.id).gte("created_at", monthAgo),
+    supabase
+      .from("appointments")
+      .select("*")
+      .eq("client_id", client.id)
+      .gte("scheduled_at", now.toISOString())
+      .neq("status", "cancelled")
+      .order("scheduled_at", { ascending: true })
+      .limit(6),
+    supabase
+      .from("leads")
+      .select("*")
+      .eq("client_id", client.id)
+      .order("created_at", { ascending: false })
+      .limit(6),
+    client.perseo_client_id
+      ? fetchCreativesForPerseoClient(client.perseo_client_id).then((r) => r.rows.filter((c) => c.status === "pending").length)
+      : Promise.resolve(0),
+  ]);
 
-  const [
-    { data: client },
-    { data: allLeads },
-    { data: recentLeads },
-    { data: upcomingAppts },
-    { count: pendingCreatives },
-  ] = await Promise.all([
-    supabase.from('clients').select('*').eq('id', clientId).single(),
-    supabase.from('leads').select('status, created_at').eq('client_id', clientId),
-    supabase.from('leads').select('*').eq('client_id', clientId).order('created_at', { ascending: false }).limit(5),
-    supabase.from('appointments').select('*').eq('client_id', clientId)
-      .gte('scheduled_at', now.toISOString())
-      .lte('scheduled_at', weekAhead.toISOString())
-      .order('scheduled_at').limit(3),
-    perseoClientId
-      ? admin.schema('perseo').from('creative_approvals')
-          .select('*', { count: 'exact', head: true })
-          .eq('client_id', perseoClientId)
-          .eq('status', 'pending')
-      : Promise.resolve({ count: 0 }),
-  ])
-
-  const c = client as Client
-  const leads = allLeads ?? []
-  const totalLeads = leads.length
-  const convertedLeads = leads.filter(l => l.status === 'converted').length
-  const leadsThisWeek = leads.filter(l => new Date(l.created_at) >= weekAgo).length
-  const conversionRate = totalLeads > 0 ? Math.round((convertedLeads / totalLeads) * 100) : 0
+  const leadsWeek = leadsWeekQ.count ?? 0;
+  const leadsPrev = leadsPrevQ.count ?? 0;
+  const leads30 = leads30Q.data ?? [];
+  const converted = leads30.filter((l) => l.status === "converted").length;
+  const conversion = leads30.length > 0 ? (converted / leads30.length) * 100 : null;
+  const appointments = apptsQ.data ?? [];
+  const recentLeads = recentLeadsQ.data ?? [];
 
   return (
-    <div className="p-8 space-y-6">
-      <div>
-        <h1 className="text-lg font-semibold text-white">{c?.business_name ?? 'Dashboard'}</h1>
-        <p className="text-sm text-neutral-500 mt-0.5">Visão geral da sua clínica</p>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title={`Olá, ${client.contact_name?.split(" ")[0] ?? client.name}`}
+        subtitle="Seus números desta semana — atualizados em tempo real."
+        actions={
+          pendingCreatives > 0 ? (
+            <Link href="/client/criativos">
+              <Button variant="primary" size="sm">
+                <Clapperboard /> {pendingCreatives} criativo{pendingCreatives > 1 ? "s" : ""} aguardando você →
+              </Button>
+            </Link>
+          ) : undefined
+        }
+      />
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <MetricCard label="Leads · 7 dias" value={fmtNumber(leadsWeek)} delta={deltaPct(leadsWeek, leadsPrev)} accent />
+        <MetricCard
+          label="Conversão · 30 dias"
+          value={fmtPercent(conversion)}
+          hint={leads30.length > 0 ? `${converted} de ${leads30.length} leads viraram clientes` : "sem leads no período"}
+        />
+        <MetricCard label="Próximos agendamentos" value={fmtNumber(appointments.length)} />
       </div>
 
-      {/* Banner de criativos pendentes */}
-      {(pendingCreatives ?? 0) > 0 && (
-        <Link href="/client/criativos" className="flex items-center justify-between bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3 hover:bg-amber-500/15 transition-colors">
-          <div>
-            <p className="text-sm font-medium text-amber-300">
-              {pendingCreatives} criativo{(pendingCreatives ?? 0) > 1 ? 's' : ''} aguardando sua aprovação
-            </p>
-            <p className="text-xs text-amber-500 mt-0.5">Clique para revisar e aprovar</p>
-          </div>
-          <span className="text-amber-400 text-lg">→</span>
-        </Link>
-      )}
-
-      <div className="grid grid-cols-3 gap-3">
-        <Stat label="Leads esta semana" value={leadsThisWeek} />
-        <Stat label="Próximos agendamentos" value={upcomingAppts?.length ?? 0} />
-        <Stat label="Taxa de conversão" value={`${conversionRate}%`} highlight={conversionRate > 0} />
-      </div>
-
-      <div className="grid grid-cols-2 gap-6">
-        <div className="space-y-3">
-          <h2 className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Leads recentes</h2>
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
-            {!recentLeads || recentLeads.length === 0 ? (
-              <div className="p-6 text-center text-sm text-neutral-600">Nenhum lead ainda.</div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Leads recentes</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-1 p-2">
+            {recentLeads.length === 0 ? (
+              <EmptyState
+                icon={UserPlus}
+                title="Nenhum lead ainda"
+                description="Assim que suas campanhas captarem leads, eles aparecem aqui em tempo real."
+                className="border-0 py-10"
+              />
             ) : (
-              <table className="w-full text-sm">
-                <tbody>
-                  {(recentLeads as Lead[]).map((l, i) => (
-                    <tr key={l.id} className={i < recentLeads.length - 1 ? 'border-b border-neutral-800/50' : ''}>
-                      <td className="px-4 py-3">
-                        <p className="text-white text-xs font-medium">{l.name ?? l.phone}</p>
-                        <p className="text-xs text-neutral-500">{new Date(l.created_at).toLocaleDateString('pt-BR')}</p>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${leadStatusColor[l.status] ?? ''}`}>
-                          {leadStatusLabel[l.status] ?? l.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              recentLeads.map((lead) => (
+                <div key={lead.id} className="flex items-center justify-between gap-3 rounded-md px-2.5 py-2 transition-colors hover:bg-surface-3/60">
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-medium text-ink">{lead.name ?? "Sem nome"}</p>
+                    <p className="num text-[11px] text-ink-faint">{lead.phone ?? lead.email ?? "—"}</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2.5">
+                    <span className="num text-[11px] text-ink-faint">{fmtRelative(lead.created_at)}</span>
+                    <StatusBadge def={LEAD_STATUS[lead.status]} />
+                  </div>
+                </div>
+              ))
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
-        <div className="space-y-3">
-          <h2 className="text-xs font-medium text-neutral-500 uppercase tracking-wide">Próximos agendamentos</h2>
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
-            {!upcomingAppts || upcomingAppts.length === 0 ? (
-              <div className="p-6 text-center text-sm text-neutral-600">Nenhum agendamento próximo.</div>
+        <Card>
+          <CardHeader className="flex-row items-center justify-between">
+            <CardTitle>Próximos agendamentos</CardTitle>
+            <Link href="/client/appointments" className="text-xs text-ink-mute transition-colors hover:text-neon">
+              Ver todos →
+            </Link>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-1 p-2">
+            {appointments.length === 0 ? (
+              <EmptyState
+                icon={CalendarDays}
+                title="Nada agendado"
+                description="Os agendamentos confirmados dos seus leads aparecem aqui."
+                className="border-0 py-10"
+              />
             ) : (
-              <table className="w-full text-sm">
-                <tbody>
-                  {(upcomingAppts as Appointment[]).map((a, i) => (
-                    <tr key={a.id} className={i < upcomingAppts.length - 1 ? 'border-b border-neutral-800/50' : ''}>
-                      <td className="px-4 py-3">
-                        <p className="text-white text-xs font-medium">{a.patient_name}</p>
-                        <p className="text-xs text-neutral-500">
-                          {new Date(a.scheduled_at).toLocaleDateString('pt-BR')}{' '}
-                          {new Date(a.scheduled_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${apptStatusColor[a.status] ?? ''}`}>
-                          {apptStatusLabel[a.status] ?? a.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              appointments.map((a) => (
+                <div key={a.id} className="flex items-center justify-between gap-3 rounded-md px-2.5 py-2 transition-colors hover:bg-surface-3/60">
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-medium text-ink">{a.patient_name}</p>
+                    <p className="num text-[11px] text-ink-faint">{fmtDateTime(a.scheduled_at)}</p>
+                  </div>
+                  <StatusBadge def={APPOINTMENT_STATUS[a.status]} />
+                </div>
+              ))
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
-
-      {c && (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4 flex items-center justify-between">
-          <div>
-            <p className="text-xs text-neutral-500 uppercase tracking-wide">Agente de IA</p>
-            <p className={`text-sm font-medium mt-0.5 ${c.agent_active ? 'text-emerald-400' : 'text-neutral-400'}`}>
-              {c.agent_active ? 'Ativo — respondendo leads automaticamente' : 'Inativo — ative em Configurações'}
-            </p>
-          </div>
-          <div className={`w-2.5 h-2.5 rounded-full ${c.agent_active ? 'bg-emerald-400 animate-pulse' : 'bg-neutral-600'}`} />
-        </div>
-      )}
     </div>
-  )
-}
-
-function Stat({ label, value, highlight }: { label: string; value: string | number; highlight?: boolean }) {
-  return (
-    <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-4">
-      <p className="text-xs text-neutral-500 uppercase tracking-wide">{label}</p>
-      <p className={`text-2xl font-semibold mt-1 ${highlight ? 'text-emerald-400' : 'text-white'}`}>{value}</p>
-    </div>
-  )
+  );
 }

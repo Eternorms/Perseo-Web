@@ -1,32 +1,29 @@
-import { createClient } from '@/lib/supabase/server'
-import { type Task, type Client, type AppUser } from '@/types'
-import KanbanBoard from './kanban-board'
-import AddTaskModal from './add-task-modal'
+import type { Metadata } from "next";
+import { createClient } from "@/lib/supabase/server";
+import { requireAgency } from "@/lib/auth";
+import { PageHeader } from "@/components/kit/page-header";
+import { KanbanBoard } from "@/components/agency/kanban-board";
+
+export const metadata: Metadata = { title: "Kanban" };
 
 export default async function KanbanPage() {
-  const supabase = await createClient()
+  await requireAgency();
+  const supabase = await createClient();
 
-  const [{ data: tasks }, { data: clients }, { data: members }] = await Promise.all([
-    supabase.from('tasks').select('*').order('created_at', { ascending: false }),
-    supabase.from('clients').select('id, business_name').order('business_name'),
-    supabase.from('app_users').select('id, name').in('user_type', ['agency_owner', 'agency_staff']),
-  ])
-
-  const t = (tasks as Task[]) ?? []
-  const c = (clients as Pick<Client, 'id' | 'business_name'>[]) ?? []
-  const m = (members as Pick<AppUser, 'id' | 'name'>[]) ?? []
+  const [tasksQ, clientsQ, usersQ] = await Promise.all([
+    supabase.from("tasks").select("*").order("position", { ascending: true }),
+    supabase.from("clients").select("id, name").order("name"),
+    supabase.from("app_users").select("id, name").in("user_type", ["agency_owner", "agency_staff"]).order("name"),
+  ]);
 
   return (
-    <div className="p-8 space-y-6 h-full">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold text-white">Kanban</h1>
-          <p className="text-sm text-neutral-500 mt-0.5">{t.length} tarefas</p>
-        </div>
-        <AddTaskModal clients={c} members={m} />
-      </div>
-
-      <KanbanBoard initialTasks={t} clients={c} members={m} />
+    <div className="flex h-full flex-col gap-5">
+      <PageHeader title="Kanban" subtitle="Tarefas da operação — arraste para mover de etapa." />
+      <KanbanBoard
+        tasks={tasksQ.data ?? []}
+        clients={clientsQ.data ?? []}
+        users={usersQ.data ?? []}
+      />
     </div>
-  )
+  );
 }

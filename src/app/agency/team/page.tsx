@@ -1,94 +1,135 @@
-import { createClient } from '@/lib/supabase/server'
-import { type AppUser } from '@/types'
-import InviteModal from './invite-modal'
-import MemberActions from './member-actions'
+import type { Metadata } from "next";
+import { UsersRound } from "lucide-react";
+import { createClient } from "@/lib/supabase/server";
+import { requireAgency } from "@/lib/auth";
+import { fmtDate } from "@/lib/format";
+import { USER_TYPE } from "@/lib/labels";
+import { PageHeader } from "@/components/kit/page-header";
+import { EmptyState } from "@/components/kit/empty-state";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar } from "@/components/ui/avatar";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { InviteUserDialog } from "@/components/agency/invite-user-dialog";
+import { RemoveUserButton } from "@/components/agency/remove-user-button";
 
-const typeLabel: Record<string, string> = {
-  agency_owner: 'Owner',
-  agency_staff: 'Staff',
-}
-
-const typeColor: Record<string, string> = {
-  agency_owner: 'bg-purple-500/15 text-purple-400',
-  agency_staff: 'bg-blue-500/15 text-blue-400',
-}
+export const metadata: Metadata = { title: "Time" };
 
 export default async function TeamPage() {
-  const supabase = await createClient()
+  const { appUser } = await requireAgency();
+  const isOwner = appUser.user_type === "agency_owner";
 
-  const [{ data: me }, { data: members }] = await Promise.all([
-    supabase.from('app_users').select('id, user_type').single(),
-    supabase
-      .from('app_users')
-      .select('*')
-      .in('user_type', ['agency_owner', 'agency_staff'])
-      .order('created_at', { ascending: true }),
-  ])
+  const supabase = await createClient();
+  const [usersQ, clientsQ] = await Promise.all([
+    supabase.from("app_users").select("*, clients(name)").order("created_at", { ascending: true }),
+    supabase.from("clients").select("id, name").order("name"),
+  ]);
+  const users = usersQ.data ?? [];
+  const clients = clientsQ.data ?? [];
 
-  const isOwner = me?.user_type === 'agency_owner'
+  const agencyUsers = users.filter((u) => u.user_type === "agency_owner" || u.user_type === "agency_staff");
+  const clientUsers = users.filter((u) => u.user_type === "client_owner" || u.user_type === "client_staff");
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold text-white">Time</h1>
-          <p className="text-sm text-neutral-500 mt-0.5">{members?.length ?? 0} membros</p>
-        </div>
-        {isOwner && <InviteModal />}
-      </div>
+    <div className="flex flex-col gap-5">
+      <PageHeader
+        title="Time"
+        subtitle="Acessos da agência e dos portais de cliente."
+        actions={isOwner ? <InviteUserDialog clients={clients} /> : undefined}
+      />
 
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl overflow-hidden">
-        {!members || members.length === 0 ? (
-          <div className="p-12 text-center">
-            <p className="text-neutral-500 text-sm">Nenhum membro ainda.</p>
-          </div>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-neutral-800">
-                <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Membro</th>
-                <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Tipo</th>
-                <th className="text-left px-4 py-3 text-xs text-neutral-500 font-medium">Desde</th>
-                {isOwner && <th className="px-4 py-3" />}
-              </tr>
-            </thead>
-            <tbody>
-              {(members as AppUser[]).map((m, i) => (
-                <tr
-                  key={m.id}
-                  className={i < members.length - 1 ? 'border-b border-neutral-800/50' : ''}
-                >
-                  <td className="px-4 py-3">
-                    <p className="text-white font-medium">{m.name}</p>
-                    <p className="text-xs text-neutral-500">{m.email}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${typeColor[m.user_type] ?? ''}`}>
-                      {typeLabel[m.user_type] ?? m.user_type}
+      <section className="flex flex-col gap-3">
+        <h2 className="microlabel">Agência</h2>
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Membro</TableHead>
+                <TableHead>Papel</TableHead>
+                <TableHead className="text-right">Desde</TableHead>
+                {isOwner ? <TableHead className="w-16 text-right">Ações</TableHead> : null}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {agencyUsers.map((u) => (
+                <TableRow key={u.id}>
+                  <TableCell>
+                    <span className="flex items-center gap-2.5">
+                      <Avatar name={u.name} tone={u.id === appUser.id ? "neon" : "default"} />
+                      <span>
+                        <span className="font-medium">
+                          {u.name} {u.id === appUser.id ? <span className="text-[10px] text-neon">(você)</span> : null}
+                        </span>
+                        <span className="block text-[11px] text-ink-faint">{u.email}</span>
+                      </span>
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-neutral-500 text-xs">
-                    {new Date(m.created_at).toLocaleDateString('pt-BR')}
-                  </td>
-                  {isOwner && (
-                    <td className="px-4 py-3 text-right">
-                      <MemberActions
-                        memberId={m.id}
-                        currentType={m.user_type as 'agency_owner' | 'agency_staff'}
-                        isSelf={m.id === me?.id}
-                      />
-                    </td>
-                  )}
-                </tr>
+                  </TableCell>
+                  <TableCell>
+                    <Badge tone={u.user_type === "agency_owner" ? "neon" : "neutral"}>{USER_TYPE[u.user_type]}</Badge>
+                  </TableCell>
+                  <TableCell className="num text-right text-ink-mute">{fmtDate(u.created_at)}</TableCell>
+                  {isOwner ? (
+                    <TableCell className="text-right">
+                      {u.id !== appUser.id ? <RemoveUserButton userId={u.id} userName={u.name} /> : null}
+                    </TableCell>
+                  ) : null}
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        )}
-      </div>
+            </TableBody>
+          </Table>
+        </Card>
+      </section>
 
-      {!isOwner && (
-        <p className="text-xs text-neutral-600">Somente owners podem convidar ou remover membros.</p>
-      )}
+      <section className="flex flex-col gap-3">
+        <h2 className="microlabel">Portais de cliente</h2>
+        {clientUsers.length === 0 ? (
+          <EmptyState
+            icon={UsersRound}
+            title="Nenhum acesso de cliente"
+            description="Convide o responsável de cada marca para o portal — ele aprova criativos, acompanha resultados e conversa com você por lá."
+            action={isOwner ? <InviteUserDialog clients={clients} defaultType="client_owner" /> : undefined}
+          />
+        ) : (
+          <Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Usuário</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Papel</TableHead>
+                  <TableHead className="text-right">Desde</TableHead>
+                  {isOwner ? <TableHead className="w-16 text-right">Ações</TableHead> : null}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {clientUsers.map((u) => (
+                  <TableRow key={u.id}>
+                    <TableCell>
+                      <span className="flex items-center gap-2.5">
+                        <Avatar name={u.name} />
+                        <span>
+                          <span className="font-medium">{u.name}</span>
+                          <span className="block text-[11px] text-ink-faint">{u.email}</span>
+                        </span>
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-ink-mute">{u.clients?.name ?? "—"}</TableCell>
+                    <TableCell>
+                      <Badge tone="info">{USER_TYPE[u.user_type]}</Badge>
+                    </TableCell>
+                    <TableCell className="num text-right text-ink-mute">{fmtDate(u.created_at)}</TableCell>
+                    {isOwner ? (
+                      <TableCell className="text-right">
+                        <RemoveUserButton userId={u.id} userName={u.name} />
+                      </TableCell>
+                    ) : null}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+        )}
+      </section>
     </div>
-  )
+  );
 }

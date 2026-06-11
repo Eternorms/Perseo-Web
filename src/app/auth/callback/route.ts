@@ -1,39 +1,44 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse } from "next/server";
+import type { EmailOtpType } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/server";
+import { getSessionContext, homePathFor } from "@/lib/auth";
+import { safeInternalPath } from "@/lib/validation/auth";
 
-export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url)
-  const code = searchParams.get('code')
-  const token_hash = searchParams.get('token_hash')
-  const type = searchParams.get('type') as string
-  const next = searchParams.get('next') ?? '/onboarding'
+/**
+ * Callback de auth: OAuth (?code=) e links de e-mail/convite
+ * (?token_hash=&type=). Convite recém-aceito segue para definição de senha.
+ */
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code");
+  const tokenHash = url.searchParams.get("token_hash");
+  const type = url.searchParams.get("type") as EmailOtpType | null;
+  const next = safeInternalPath(url.searchParams.get("next"), "");
 
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cookiesToSet) => {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
+  const supabase = await createClient();
 
+  let ok = false;
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) return NextResponse.redirect(new URL(next, origin))
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    ok = !error;
+  } else if (tokenHash && type) {
+    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+    ok = !error;
   }
 
-  if (token_hash && type) {
-    const { error } = await supabase.auth.verifyOtp({ token_hash, type: type as Parameters<typeof supabase.auth.verifyOtp>[0]['type'] })
-    if (!error) return NextResponse.redirect(new URL(next, origin))
+  if (!ok) {
+    return NextResponse.redirect(new URL("/login?error=callback", url.origin));
   }
 
-  return NextResponse.redirect(new URL('/login?error=Link+inválido+ou+expirado.', origin))
+  if (type === "invite" || type === "recovery") {
+    return NextResponse.redirect(new URL("/auth/set-password", url.origin));
+  }
+
+  const ctx = await getSessionContext();
+  if (!ctx) {
+    await supabase.auth.signOut();
+    return NextResponse.redirect(new URL("/login?error=sem_vinculo", url.origin));
+  }
+
+  return NextResponse.redirect(new URL(next || homePathFor(ctx), url.origin));
 }
