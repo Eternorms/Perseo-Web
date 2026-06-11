@@ -200,25 +200,44 @@ export type JobRow = {
 }
 
 /* Database genérico para supabase-js. Insert/Update parciais: NOT NULL e
-   defaults são responsabilidade das migrations; validação de entrada é zod. */
-type Def<R> = { Row: R; Insert: Partial<R>; Update: Partial<R>; Relationships: [] };
+   defaults são responsabilidade das migrations; validação de entrada é zod.
+   Relationships seguem os nomes default de FK do Postgres (<tabela>_<coluna>_fkey)
+   para habilitar selects aninhados tipados (ex.: clients(name)). */
+type Rel<Name extends string, Col extends string, Ref extends string, One extends boolean = false> = {
+  foreignKeyName: Name;
+  columns: [Col];
+  isOneToOne: One;
+  referencedRelation: Ref;
+  referencedColumns: ["id"];
+};
+
+type Def<R, Rels extends unknown[] = []> = { Row: R; Insert: Partial<R>; Update: Partial<R>; Relationships: Rels };
+
+type ToClient<T extends string> = Rel<`${T}_client_id_fkey`, "client_id", "clients">;
 
 export type Database = {
   public: {
     Tables: {
       clients: Def<ClientRow>;
-      app_users: Def<AppUserRow>;
-      leads: Def<LeadRow>;
-      appointments: Def<AppointmentRow>;
-      followup_queue: Def<FollowupRow>;
-      client_messages: Def<ClientMessageRow>;
-      client_notifications: Def<ClientNotificationRow>;
-      agent_actions: Def<AgentActionRow>;
-      tasks: Def<TaskRow>;
-      social_posts: Def<SocialPostRow>;
-      campaign_metrics: Def<CampaignMetricRow>;
-      funnel_stages: Def<FunnelStageRow>;
-      job_queue: Def<JobRow>;
+      app_users: Def<AppUserRow, [ToClient<"app_users">]>;
+      leads: Def<LeadRow, [ToClient<"leads">]>;
+      appointments: Def<AppointmentRow, [ToClient<"appointments">, Rel<"appointments_lead_id_fkey", "lead_id", "leads">]>;
+      followup_queue: Def<FollowupRow, [ToClient<"followup_queue">, Rel<"followup_queue_lead_id_fkey", "lead_id", "leads">]>;
+      client_messages: Def<ClientMessageRow, [ToClient<"client_messages">, Rel<"client_messages_sender_id_fkey", "sender_id", "app_users">]>;
+      client_notifications: Def<ClientNotificationRow, [ToClient<"client_notifications">]>;
+      agent_actions: Def<AgentActionRow, [ToClient<"agent_actions">, Rel<"agent_actions_requested_by_fkey", "requested_by", "app_users">]>;
+      tasks: Def<
+        TaskRow,
+        [
+          ToClient<"tasks">,
+          Rel<"tasks_assigned_to_fkey", "assigned_to", "app_users">,
+          Rel<"tasks_created_by_fkey", "created_by", "app_users">,
+        ]
+      >;
+      social_posts: Def<SocialPostRow, [ToClient<"social_posts">]>;
+      campaign_metrics: Def<CampaignMetricRow, [ToClient<"campaign_metrics">]>;
+      funnel_stages: Def<FunnelStageRow, [ToClient<"funnel_stages">]>;
+      job_queue: Def<JobRow, [ToClient<"job_queue">]>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
