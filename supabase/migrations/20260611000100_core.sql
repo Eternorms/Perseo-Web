@@ -50,6 +50,8 @@ create table public.clients (
   contact_name      text,
   contact_phone     text,
   contact_email     text,
+  -- Qualificação vinda da captura de lead do site (faturamento, origem…)
+  intake            jsonb,
   created_at        timestamptz not null default now(),
   updated_at        timestamptz not null default now()
 );

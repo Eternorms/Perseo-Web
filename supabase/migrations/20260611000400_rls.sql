@@ -106,7 +106,7 @@ create policy messages_delete on public.client_messages for delete to authentica
 create policy notifications_select on public.client_notifications for select to authenticated
   using ((select public.is_agency()) or client_id = (select public.current_client_id()));
 create policy notifications_insert on public.client_notifications for insert to authenticated
-  with check ((select public.is_agency()));
+  with check ((select public.is_agency()) or client_id = (select public.current_client_id()));
 create policy notifications_update on public.client_notifications for update to authenticated
   using ((select public.is_agency()) or client_id = (select public.current_client_id()))
   with check ((select public.is_agency()) or client_id = (select public.current_client_id()));

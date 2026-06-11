@@ -43,6 +43,7 @@ export type ClientRow = {
   contact_name: string | null;
   contact_phone: string | null;
   contact_email: string | null;
+  intake: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }
