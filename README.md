@@ -46,11 +46,12 @@ Migrations do schema `public` em `supabase/migrations/` (aplicar em ordem no SQL
 
 ## Testes
 
-72 testes cobrem o núcleo de negócio e as telas críticas:
+78 testes cobrem o núcleo de negócio e as telas críticas:
 
 - **Métricas** — ROAS ajustado por fraude, agregação ponderada por spend, funil cumulativo, MRR/churn.
 - **Validações** — onboarding (7 steps), captura de lead (honeypot), anti open-redirect no `?next=`.
 - **Ponte perseo** — `decideCreativeAction`: autorização por `perseo_client_id`, feedback obrigatório em revisão/rejeição, notificação gerada (única escrita permitida no schema do engine).
+- **Agente** — cliente só solicita sobre os próprios agendamentos, reagendamento exige data futura, transições de status restritas à agência e validadas (`pending → approved → executed`).
 - **RLS (estático)** — toda tabela com RLS + policies, tabelas internas só-agência, realtime publicado nas 4 tabelas exigidas. Roteiro manual com dois usuários em `supabase/tests/README.md`.
 - **Smoke de UI** — login (senha + OAuth + `?next=`), wizard de onboarding (obrigatório vs. pulável, revisão), form de cliente (campo da ponte, exclusão só-owner).
 
