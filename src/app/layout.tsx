@@ -1,37 +1,27 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Perseo Agency",
-  description: "Perseo Agency — Gestão de tráfego e criativos para clínicas.",
-  metadataBase: new URL('https://perseoagency.net'),
-  other: {
-    "facebook-domain-verification": "2mbnl3onqm0mohiv4p3zgqlg4evh3x",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://perseoagency.net"),
+  title: {
+    default: "Perseo — Growth full-funnel alavancado por IA",
+    template: "%s · Perseo",
+  },
+  description:
+    "Parceiro de crescimento full-funnel para D2C e e-commerce: inteligência de concorrentes, criativos UGC em escala, landing e relatório — com proteção contra fraude.",
+  openGraph: {
+    siteName: "Perseo",
+    locale: "pt_BR",
+    type: "website",
   },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="pt-BR"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="pt-BR" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <body className="min-h-dvh bg-surface-0 text-ink antialiased">{children}</body>
     </html>
   );
 }
