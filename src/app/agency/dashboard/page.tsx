@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarDays, MessageSquare, UserPlus, Users } from "lucide-react";
+import { Bot, CalendarDays, MessageSquare, UserPlus, Users } from "lucide-react";
+import { AgentActionsList } from "@/components/agency/agent-actions-card";
+import { DashboardRealtime } from "@/components/agency/dashboard-realtime";
 import { createClient } from "@/lib/supabase/server";
 import { requireAgency } from "@/lib/auth";
 import { computeMrr, deltaPct } from "@/lib/metrics";
@@ -26,7 +28,7 @@ export default async function AgencyDashboardPage() {
   const monthAgo = new Date(now.getTime() - 30 * 864e5).toISOString();
   const in7days = new Date(now.getTime() + 7 * 864e5).toISOString();
 
-  const [clientsQ, leadsWeekQ, leadsPrevWeekQ, leads30Q, apptsQ, unreadQ, recentLeadsQ] = await Promise.all([
+  const [clientsQ, leadsWeekQ, leadsPrevWeekQ, leads30Q, apptsQ, unreadQ, recentLeadsQ, agentQ] = await Promise.all([
     supabase.from("clients").select("id, name, status, monthly_value, onboarding_step, created_at"),
     supabase.from("leads").select("id", { count: "exact", head: true }).gte("created_at", weekAgo),
     supabase.from("leads").select("id", { count: "exact", head: true }).gte("created_at", twoWeeksAgo).lt("created_at", weekAgo),
@@ -49,6 +51,12 @@ export default async function AgencyDashboardPage() {
       .select("id, name, phone, status, created_at, client_id, clients(name)")
       .order("created_at", { ascending: false })
       .limit(8),
+    supabase
+      .from("agent_actions")
+      .select("*, clients(name)")
+      .in("status", ["pending", "approved"])
+      .order("created_at", { ascending: false })
+      .limit(6),
   ]);
 
   const clients = clientsQ.data ?? [];
@@ -61,10 +69,12 @@ export default async function AgencyDashboardPage() {
   const appointments = apptsQ.data ?? [];
   const unread = unreadQ.count ?? 0;
   const recentLeads = recentLeadsQ.data ?? [];
+  const agentActions = agentQ.data ?? [];
   const onboardings = clients.filter((c) => c.status === "onboarding");
 
   return (
     <div className="flex flex-col gap-6">
+      <DashboardRealtime />
       <PageHeader
         title="Dashboard"
         subtitle="Visão geral da operação — números ao vivo do CRM."
@@ -164,6 +174,20 @@ export default async function AgencyDashboardPage() {
               )}
             </CardContent>
           </Card>
+
+          {agentActions.length > 0 ? (
+            <Card>
+              <CardHeader className="flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Bot className="size-4 text-neon" aria-hidden /> Solicitações do agente
+                </CardTitle>
+                <span className="num text-[11px] text-warn">{agentActions.length} aberta{agentActions.length > 1 ? "s" : ""}</span>
+              </CardHeader>
+              <CardContent className="p-3">
+                <AgentActionsList actions={agentActions} />
+              </CardContent>
+            </Card>
+          ) : null}
 
           <Card>
             <CardHeader className="flex-row items-center justify-between">
