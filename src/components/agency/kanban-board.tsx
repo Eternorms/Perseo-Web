@@ -39,7 +39,12 @@ export function KanbanBoard({ tasks, clients, users }: { tasks: TaskRow[]; clien
   const [editing, setEditing] = React.useState<TaskRow | null>(null);
   const [creatingIn, setCreatingIn] = React.useState<TaskStatus | null>(null);
 
-  React.useEffect(() => setItems(tasks), [tasks]);
+  // sincroniza com o servidor quando o RSC re-renderiza (padrão "adjust during render")
+  const [prevTasks, setPrevTasks] = React.useState(tasks);
+  if (prevTasks !== tasks) {
+    setPrevTasks(tasks);
+    setItems(tasks);
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),

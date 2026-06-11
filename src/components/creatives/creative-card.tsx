@@ -126,7 +126,6 @@ function Thumb({ creative }: { creative: CreativeApprovalRow }) {
   return (
     <span className="relative block aspect-[9/16] max-h-72 w-full overflow-hidden bg-surface-1">
       {creative.thumbnail_url ? (
-        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={creative.thumbnail_url}
           alt=""

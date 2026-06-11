@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { Plus } from "lucide-react";
 import { createAppointmentAction } from "@/lib/actions/appointments";
 import type { FormState } from "@/lib/actions/clients";
@@ -24,14 +24,14 @@ export function NewAppointmentDialog({
   leads?: Array<{ id: string; name: string }>;
 }) {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState(createAppointmentAction, INITIAL);
-
-  useEffect(() => {
-    if (state.ok) {
+  const [state, formAction, pending] = useActionState(async (prev: FormState, fd: FormData) => {
+    const result = await createAppointmentAction(prev, fd);
+    if (result.ok) {
       toast.success("Agendamento criado — cliente notificado.");
       setOpen(false);
     }
-  }, [state]);
+    return result;
+  }, INITIAL);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

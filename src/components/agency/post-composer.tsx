@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { Plus } from "lucide-react";
 import { createPostAction, updatePostAction } from "@/lib/actions/posts";
 import type { FormState } from "@/lib/actions/clients";
@@ -40,20 +40,19 @@ export function PostComposer({
   const setOpen = onOpenChange ?? setUncontrolledOpen;
 
   const action = post ? updatePostAction : createPostAction;
-  const [state, formAction, pending] = useActionState(action, INITIAL);
+  const [state, formAction, pending] = useActionState(async (prev: FormState, fd: FormData) => {
+    const result = await action(prev, fd);
+    if (result.ok) {
+      toast.success(post ? "Post atualizado." : "Post salvo.");
+      setOpen(false);
+    }
+    return result;
+  }, INITIAL);
 
   const [caption, setCaption] = useState(post?.caption ?? "");
   const [mediaUrl, setMediaUrl] = useState(post?.media_url ?? "");
   const [mediaType, setMediaType] = useState(post?.media_type ?? "");
   const [clientId, setClientId] = useState(post?.client_id ?? "");
-
-  useEffect(() => {
-    if (state.ok) {
-      toast.success(post ? "Post atualizado." : "Post salvo.");
-      setOpen(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state]);
 
   const clientName = clients.find((c) => c.id === clientId)?.name ?? "Sua marca";
 
@@ -157,7 +156,6 @@ export function PostComposer({
               </div>
               <div className="flex aspect-square items-center justify-center bg-surface-0">
                 {mediaUrl && mediaType === "image" ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={mediaUrl} alt="" className="size-full object-cover" />
                 ) : mediaUrl && mediaType === "video" ? (
                   <video src={mediaUrl} className="size-full object-cover" muted playsInline />

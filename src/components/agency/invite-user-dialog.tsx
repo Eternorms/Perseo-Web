@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { UserPlus } from "lucide-react";
 import { inviteUserAction } from "@/lib/actions/team";
 import type { FormState } from "@/lib/actions/clients";
@@ -23,16 +23,16 @@ export function InviteUserDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [userType, setUserType] = useState<UserType>(defaultType);
-  const [state, formAction, pending] = useActionState(inviteUserAction, INITIAL);
-
-  const isClientUser = userType === "client_owner" || userType === "client_staff";
-
-  useEffect(() => {
-    if (state.ok) {
+  const [state, formAction, pending] = useActionState(async (prev: FormState, fd: FormData) => {
+    const result = await inviteUserAction(prev, fd);
+    if (result.ok) {
       toast.success("Convite enviado por e-mail.");
       setOpen(false);
     }
-  }, [state]);
+    return result;
+  }, INITIAL);
+
+  const isClientUser = userType === "client_owner" || userType === "client_staff";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect } from "react";
+import { useActionState } from "react";
 import { createTaskAction, deleteTaskAction, updateTaskAction } from "@/lib/actions/tasks";
 import type { FormState } from "@/lib/actions/clients";
 import { Dialog, DialogContent, DialogFooter } from "@/components/ui/dialog";
@@ -36,14 +36,14 @@ export function TaskDialog({
   users: Option[];
 }) {
   const action = task ? updateTaskAction : createTaskAction;
-  const [state, formAction, pending] = useActionState(action, INITIAL);
-
-  useEffect(() => {
-    if (state.ok) {
+  const [state, formAction, pending] = useActionState(async (prev: FormState, fd: FormData) => {
+    const result = await action(prev, fd);
+    if (result.ok) {
       toast.success(task ? "Tarefa atualizada." : "Tarefa criada.");
       onClose();
     }
-  }, [state, task, onClose]);
+    return result;
+  }, INITIAL);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>

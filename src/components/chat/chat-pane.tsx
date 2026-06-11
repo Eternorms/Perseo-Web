@@ -33,7 +33,12 @@ export function ChatPane({
   const formRef = React.useRef<HTMLFormElement>(null);
   const textRef = React.useRef<HTMLTextAreaElement>(null);
 
-  React.useEffect(() => setMessages(initialMessages), [initialMessages]);
+  // troca de conversa / refresh do RSC (padrão "adjust during render")
+  const [prevInitial, setPrevInitial] = React.useState(initialMessages);
+  if (prevInitial !== initialMessages) {
+    setPrevInitial(initialMessages);
+    setMessages(initialMessages);
+  }
 
   // realtime: INSERTs desta conversa
   React.useEffect(() => {
@@ -95,7 +100,7 @@ export function ChatPane({
     textRef.current?.focus();
   }
 
-  let lastDay = "";
+  const dayOf = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -105,10 +110,9 @@ export function ChatPane({
             Nenhuma mensagem ainda — esta conversa fica registrada para vocês dois.
           </p>
         ) : null}
-        {messages.map((msg) => {
-          const day = new Date(msg.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
-          const showDay = day !== lastDay;
-          lastDay = day;
+        {messages.map((msg, i) => {
+          const day = dayOf(msg.created_at);
+          const showDay = i === 0 || day !== dayOf(messages[i - 1].created_at);
           const own = msg.sender_type === viewer;
           return (
             <React.Fragment key={msg.id}>

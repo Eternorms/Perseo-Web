@@ -4,7 +4,6 @@ import { ChevronLeft, ChevronRight, ListTodo } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { requireAgency } from "@/lib/auth";
 import { fmtTime } from "@/lib/format";
-import { APPOINTMENT_STATUS } from "@/lib/labels";
 import { PageHeader } from "@/components/kit/page-header";
 import { EmptyState } from "@/components/kit/empty-state";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

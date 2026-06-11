@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAgency } from "@/lib/auth";
 import { fetchCreativesForPerseoClient } from "@/lib/data/creatives";
 import { fmtCurrency, fmtDateTime, fmtRelative } from "@/lib/format";
-import { APPOINTMENT_STATUS, CLIENT_STATUS, LEAD_STATUS, SERVICE_LABEL } from "@/lib/labels";
+import { CLIENT_STATUS, SERVICE_LABEL } from "@/lib/labels";
 import { PageHeader } from "@/components/kit/page-header";
 import { LinkTabs } from "@/components/kit/link-tabs";
 import { EmptyState } from "@/components/kit/empty-state";

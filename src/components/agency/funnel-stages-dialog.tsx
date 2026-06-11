@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { Settings2 } from "lucide-react";
 import { saveFunnelStagesAction } from "@/lib/actions/funnel";
 import type { FormState } from "@/lib/actions/clients";
@@ -24,15 +24,21 @@ interface StageDraft {
 export function FunnelStagesDialog({ clientId, stages }: { clientId: string; stages: StageDraft[] }) {
   const [open, setOpen] = useState(false);
   const [drafts, setDrafts] = useState<StageDraft[]>(stages);
-  const [state, formAction, pending] = useActionState(saveFunnelStagesAction, INITIAL);
+  const [prevStages, setPrevStages] = useState(stages);
+  if (prevStages !== stages) {
+    // sincroniza os drafts quando o server component re-renderiza com novas etapas
+    setPrevStages(stages);
+    setDrafts(stages);
+  }
 
-  useEffect(() => setDrafts(stages), [stages]);
-  useEffect(() => {
-    if (state.ok) {
+  const [state, formAction, pending] = useActionState(async (prev: FormState, fd: FormData) => {
+    const result = await saveFunnelStagesAction(prev, fd);
+    if (result.ok) {
       toast.success("Funil atualizado.");
       setOpen(false);
     }
-  }, [state]);
+    return result;
+  }, INITIAL);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

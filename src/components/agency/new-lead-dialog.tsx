@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { Plus } from "lucide-react";
 import { createLeadAction } from "@/lib/actions/leads";
 import type { FormState } from "@/lib/actions/clients";
@@ -24,14 +24,14 @@ export function NewLeadDialog({
   clients?: Array<{ id: string; name: string }>;
 }) {
   const [open, setOpen] = useState(false);
-  const [state, formAction, pending] = useActionState(createLeadAction, INITIAL);
-
-  useEffect(() => {
-    if (state.ok) {
+  const [state, formAction, pending] = useActionState(async (prev: FormState, fd: FormData) => {
+    const result = await createLeadAction(prev, fd);
+    if (result.ok) {
       toast.success("Lead criado.");
       setOpen(false);
     }
-  }, [state]);
+    return result;
+  }, INITIAL);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

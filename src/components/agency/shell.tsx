@@ -73,7 +73,12 @@ export function AgencyShell({
   const pathname = usePathname();
   const [open, setOpen] = React.useState(false);
 
-  React.useEffect(() => setOpen(false), [pathname]);
+  // fecha o menu mobile ao navegar (padrão "adjust during render")
+  const [prevPath, setPrevPath] = React.useState(pathname);
+  if (prevPath !== pathname) {
+    setPrevPath(pathname);
+    if (open) setOpen(false);
+  }
 
   const nav = (
     <nav className="flex flex-1 flex-col gap-5 overflow-y-auto px-3 py-4" aria-label="Navegação da agência">
