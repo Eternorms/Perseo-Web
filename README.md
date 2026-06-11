@@ -57,3 +57,15 @@ Migrations do schema `public` em `supabase/migrations/` (aplicar em ordem no SQL
 ## Deploy (Railway)
 
 Build padrão Next (`npm run build` / `npm start`). Variáveis necessárias: ver `.env.example`. Sem segredos no repo; `SUPABASE_SERVICE_ROLE_KEY` jamais vai para o browser (apenas `src/lib/supabase/admin.ts`, marcado `server-only`).
+
+## Go-live (runbook)
+
+Ordem testada em produção:
+
+1. **Supabase** — criar projeto; em *Settings → API* copiar Project URL, `anon` e `service_role`.
+2. **Migrations** — rodar os 4 arquivos de `supabase/migrations/` em ordem no SQL Editor (ou `supabase db push`). Se o projeto tiver schema antigo, resetar antes (drop das tabelas do `public` — `auth` e `perseo` ficam intactos).
+3. **Owner** — criar o usuário em *Authentication → Users* (Auto Confirm) e rodar o insert de `supabase/seed.sql` com o e-mail dele.
+4. **Auth URLs** — *Authentication → URL Configuration*: Site URL = domínio público; Redirect URLs com `/auth/callback` (produção e localhost). Obrigatório para convites e OAuth.
+5. **Railway** — Source na branch `main` com Root Directory **vazio** (raiz); definir as 4 variáveis de `.env.example`; domínio custom com Cloudflare em SSL **Full**.
+6. **Smoke** — landing → formulário de lead cria `clients` em onboarding → login do owner cai em `/agency/dashboard`.
+7. **RLS viva** — com o primeiro cliente real, rodar o roteiro de dois usuários em `supabase/tests/README.md`.

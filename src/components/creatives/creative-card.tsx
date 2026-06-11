@@ -176,15 +176,14 @@ function DecisionForm({ creative }: { creative: CreativeApprovalRow }) {
     if (state.ok) toast.success("Decisão registrada — a Perseo já foi avisada.");
   }, [state]);
 
-  if (creative.status === "approved" || (creative.status === "rejected" && !state.ok)) {
-    if (creative.status === "approved") {
-      return (
-        <p className="rounded-md border border-neon/25 bg-neon/5 px-3 py-2.5 text-[13px] text-ink">
-          Aprovado{creative.scheduled_at ? ` — publicação agendada para ${fmtDateTime(creative.scheduled_at)}.` : ". A agência vai agendar a publicação."}
-        </p>
-      );
-    }
+  if (creative.status === "approved") {
+    return (
+      <p className="rounded-md border border-neon/25 bg-neon/5 px-3 py-2.5 text-[13px] text-ink">
+        Aprovado{creative.scheduled_at ? ` — publicação agendada para ${fmtDateTime(creative.scheduled_at)}.` : ". A agência vai agendar a publicação."}
+      </p>
+    );
   }
+  // rejected/revision/pending seguem com o form — o cliente pode reconsiderar
 
   const needsFeedback = decision === "revision" || decision === "rejected";
 

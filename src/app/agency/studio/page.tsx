@@ -53,7 +53,7 @@ export default async function StudioPage() {
   ];
 
   return (
-    <div className="relative -m-4 flex min-h-[calc(100dvh-3rem)] flex-col lg:-m-8 lg:min-h-dvh">
+    <div className="relative -mx-4 -mb-16 flex min-h-[calc(100dvh-4rem)] flex-col lg:-mx-8 lg:-mt-8 lg:min-h-dvh">
       <div className="grid-bg pointer-events-none absolute inset-0" aria-hidden />
 
       {/* barra de status */}

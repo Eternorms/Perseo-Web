@@ -13,6 +13,7 @@ import { StatusBadge } from "@/components/kit/status-badge";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ClientEditForm } from "@/components/agency/client-edit-form";
+import { InviteUserDialog } from "@/components/agency/invite-user-dialog";
 import { NewLeadDialog } from "@/components/agency/new-lead-dialog";
 import { LeadStatusSelect } from "@/components/agency/lead-status-select";
 import { NewAppointmentDialog } from "@/components/agency/new-appointment-dialog";
@@ -58,6 +59,9 @@ export default async function ClientDetailPage({
           <div className="flex items-center gap-3">
             <span className="num text-sm text-ink-mute">{fmtCurrency(client.monthly_value)}/mês</span>
             <StatusBadge def={CLIENT_STATUS[client.status]} />
+            {appUser.user_type === "agency_owner" ? (
+              <InviteUserDialog clients={[]} fixedClient={{ id: client.id, name: client.name }} />
+            ) : null}
           </div>
         }
       />

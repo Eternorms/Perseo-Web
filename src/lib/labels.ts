@@ -4,6 +4,7 @@
  */
 
 import type {
+  AgentActionStatus,
   AgentActionType,
   AppointmentStatus,
   ClientStatus,
@@ -81,6 +82,14 @@ export const AGENT_ACTION: Record<AgentActionType, string> = {
   cancel_appointment: "Cancelar agendamento",
   reschedule: "Reagendar",
   qualify_lead: "Qualificar lead",
+};
+
+export const AGENT_ACTION_STATUS: Record<AgentActionStatus, { label: string; tone: Tone }> = {
+  pending: { label: "Pendente", tone: "warn" },
+  approved: { label: "Aprovada", tone: "info" },
+  executed: { label: "Executada", tone: "neon" },
+  failed: { label: "Falhou", tone: "loss" },
+  cancelled: { label: "Cancelada", tone: "neutral" },
 };
 
 export const PLATFORM_LABEL: Record<string, string> = {
