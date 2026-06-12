@@ -30,7 +30,8 @@ export function perseoDb() {
   return createAdminClient().schema("perseo");
 }
 
-/** true quando as envs do admin existem (páginas degradam com elegância sem elas). */
+/** true quando as envs do admin existem e são válidas (páginas degradam com elegância sem elas). */
 export function adminConfigured(): boolean {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  return Boolean(url && process.env.SUPABASE_SERVICE_ROLE_KEY && URL.canParse(url));
 }
