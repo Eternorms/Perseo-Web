@@ -13,6 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sparkline } from "@/components/charts/sparkline";
 import { LeadForm } from "./lead-form";
+import { Reveal } from "./reveal";
+import { FunnelFlow } from "./funnel-flow";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -43,21 +45,21 @@ function Hero() {
       <div className="grid-bg pointer-events-none absolute inset-0" aria-hidden />
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-0 h-[480px] w-[820px] -translate-x-1/2 rounded-full opacity-20 blur-3xl"
+        className="hero-glow pointer-events-none absolute left-1/2 top-0 h-[480px] w-[820px] rounded-full blur-3xl"
         style={{ background: "radial-gradient(closest-side, rgba(0,255,65,0.25), transparent)" }}
       />
       <div className="relative mx-auto w-full max-w-6xl px-5 pb-16 pt-20 text-center md:pt-28">
         <p className="microlabel animate-rise">Agência de growth AI-first · D2C & e-commerce</p>
-        <h1 className="mx-auto mt-5 max-w-3xl animate-rise text-4xl font-semibold leading-[1.08] tracking-tight md:text-6xl">
+        <h1 className="mx-auto mt-5 max-w-3xl animate-rise text-4xl font-semibold leading-[1.08] tracking-tight [animation-delay:90ms] md:text-6xl">
           Seu funil inteiro.
           <br />
           <span className="text-neon glow-neon">Um parceiro sênior.</span>
         </h1>
-        <p className="mx-auto mt-6 max-w-xl animate-rise text-base leading-relaxed text-ink-mute md:text-lg">
+        <p className="mx-auto mt-6 max-w-xl animate-rise text-base leading-relaxed text-ink-mute [animation-delay:180ms] md:text-lg">
           Da inteligência de concorrentes ao criativo UGC, landing e relatório — operado por IA,
           auditado contra fraude. Velocidade de teste que cinco fornecedores soltos não entregam.
         </p>
-        <div className="mt-9 flex animate-rise items-center justify-center gap-3">
+        <div className="mt-9 flex animate-rise items-center justify-center gap-3 [animation-delay:270ms]">
           <Link href="#contato">
             <Button variant="primary" size="lg">
               Pedir análise gratuita →
@@ -85,7 +87,7 @@ function CommandCenterPreview() {
     { label: "FRAUDE", value: "6,2%", delta: "▼ 2,3%", good: true },
   ];
   return (
-    <figure aria-hidden className="mx-auto mt-16 max-w-4xl animate-rise text-left">
+    <figure aria-hidden className="mx-auto mt-16 max-w-4xl animate-rise text-left [animation-delay:360ms]">
       <div className="overflow-hidden rounded-xl border border-line-strong bg-surface-1 shadow-2xl shadow-black/60">
         <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
           <span className="microlabel">perseo · command center</span>
@@ -110,11 +112,22 @@ function CommandCenterPreview() {
             { name: "UGC-014 · dor → rotina", status: "VENCEDOR", roas: "4.02×", pts: [2, 3, 2.8, 3.4, 3.9, 4.0] },
             { name: "UGC-019 · prova social", status: "TESTE", roas: "2.31×", pts: [1.5, 1.8, 2.4, 2.1, 2.2, 2.3] },
             { name: "UGC-021 · unboxing POV", status: "TESTE", roas: "1.87×", pts: [1, 1.6, 1.4, 1.9, 1.8, 1.9] },
-          ].map((row) => (
-            <div key={row.name} className="flex items-center justify-between gap-4 px-4 py-2.5">
+          ].map((row, i) => (
+            <div
+              key={row.name}
+              className="flex animate-rise items-center justify-between gap-4 px-4 py-2.5"
+              style={{ animationDelay: `${480 + i * 140}ms` }}
+            >
               <span className="num truncate text-xs text-ink-mute">{row.name}</span>
               <span className="flex items-center gap-5">
-                <Sparkline points={row.pts} width={88} height={22} color={row.status === "VENCEDOR" ? "#00FF41" : "#5BA3FF"} />
+                <Sparkline
+                  points={row.pts}
+                  width={88}
+                  height={22}
+                  color={row.status === "VENCEDOR" ? "#00FF41" : "#5BA3FF"}
+                  draw
+                  drawDelay={i * 200}
+                />
                 <span
                   className={cn(
                     "num rounded-sm border px-1.5 py-0.5 text-[10px]",
@@ -142,7 +155,7 @@ function PainStrip() {
   return (
     <section className="border-b border-line bg-surface-1">
       <div className="mx-auto grid w-full max-w-6xl gap-px overflow-hidden px-5 py-14 md:grid-cols-2 md:gap-10">
-        <div>
+        <Reveal>
           <p className="microlabel text-loss">O modelo quebrado</p>
           <h2 className="mt-3 text-2xl font-semibold tracking-tight">
             Cinco fornecedores. Zero accountability.
@@ -153,8 +166,8 @@ function PainStrip() {
             <li>— Relatório chega no dia 15, sem dizer o que fazer.</li>
             <li>— E uma fatia do seu orçamento morre em cliques fraudulentos que ninguém mede.</li>
           </ul>
-        </div>
-        <div>
+        </Reveal>
+        <Reveal delay={130}>
           <p className="microlabel text-neon">O modelo Perseo</p>
           <h2 className="mt-3 text-2xl font-semibold tracking-tight">
             Um parceiro dono do funil inteiro.
@@ -165,7 +178,7 @@ function PainStrip() {
             <li>→ ROAS auditado contra fraude antes de qualquer decisão.</li>
             <li>→ Operação alavancada por IA: velocidade de squad, senioridade de partner.</li>
           </ul>
-        </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -205,17 +218,22 @@ function Methodology() {
   return (
     <section id="metodologia" className="scroll-mt-20 border-b border-line">
       <div className="mx-auto w-full max-w-6xl px-5 py-20">
-        <p className="microlabel">Metodologia</p>
-        <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight">
-          Full-funnel de verdade: cada fase alimenta a próxima.
-        </h2>
+        <Reveal>
+          <p className="microlabel">Metodologia</p>
+          <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight">
+            Full-funnel de verdade: cada fase alimenta a próxima.
+          </h2>
+          <FunnelFlow />
+        </Reveal>
         <div className="mt-12 grid gap-px overflow-hidden rounded-lg border border-line bg-line md:grid-cols-5">
-          {PHASES.map((p) => (
-            <article key={p.n} className="group bg-surface-2 p-5 transition-colors hover:bg-surface-3">
-              <span className="num text-[11px] text-neon">{p.n}</span>
-              <h3 className="mt-2 text-sm font-semibold text-ink">{p.title}</h3>
-              <p className="mt-2 text-xs leading-relaxed text-ink-mute">{p.desc}</p>
-            </article>
+          {PHASES.map((p, i) => (
+            <Reveal key={p.n} delay={i * 80}>
+              <article className="h-full bg-surface-2 p-5 transition-colors hover:bg-surface-3">
+                <span className="num text-[11px] text-neon">{p.n}</span>
+                <h3 className="mt-2 text-sm font-semibold text-ink">{p.title}</h3>
+                <p className="mt-2 text-xs leading-relaxed text-ink-mute">{p.desc}</p>
+              </article>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -280,23 +298,21 @@ function Capabilities() {
   return (
     <section id="capacidades" className="scroll-mt-20 border-b border-line bg-surface-1">
       <div className="mx-auto w-full max-w-6xl px-5 py-20">
-        <p className="microlabel">Capacidades</p>
-        <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight">
-          O stack que cobre ~80% do seu funil de aquisição.
-        </h2>
+        <Reveal>
+          <p className="microlabel">Capacidades</p>
+          <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight">
+            O stack que cobre ~80% do seu funil de aquisição.
+          </h2>
+        </Reveal>
         <div className="mt-12 grid gap-4 md:grid-cols-4">
-          {CAPABILITIES.map((c) => (
-            <article
-              key={c.title}
-              className={cn(
-                "rounded-lg border border-line bg-surface-2 p-5 transition-colors hover:border-line-strong",
-                c.span,
-              )}
-            >
-              <c.icon className="size-5 text-neon" aria-hidden />
-              <h3 className="mt-3 text-sm font-semibold text-ink">{c.title}</h3>
-              <p className="mt-1.5 text-xs leading-relaxed text-ink-mute">{c.desc}</p>
-            </article>
+          {CAPABILITIES.map((c, i) => (
+            <Reveal key={c.title} delay={i * 60} className={c.span}>
+              <article className="h-full rounded-lg border border-line bg-surface-2 p-5 transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-line-strong">
+                <c.icon className="size-5 text-neon" aria-hidden />
+                <h3 className="mt-3 text-sm font-semibold text-ink">{c.title}</h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-ink-mute">{c.desc}</p>
+              </article>
+            </Reveal>
           ))}
         </div>
       </div>
@@ -310,7 +326,7 @@ function FraudSection() {
   return (
     <section className="border-b border-line">
       <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-5 py-20 md:grid-cols-2">
-        <div>
+        <Reveal>
           <p className="microlabel text-loss">Auditoria de fraude</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight">Quanto do seu ROAS é mentira?</h2>
           <p className="mt-4 max-w-md text-sm leading-relaxed text-ink-mute">
@@ -321,8 +337,8 @@ function FraudSection() {
           <Link href="#contato" className="mt-6 inline-block">
             <Button variant="outline">Auditar minha conta →</Button>
           </Link>
-        </div>
-        <div className="rounded-xl border border-line-strong bg-surface-2 p-6" aria-hidden>
+        </Reveal>
+        <Reveal delay={130} className="rounded-xl border border-line-strong bg-surface-2 p-6">
           <p className="microlabel mb-4">fórmula de decisão</p>
           <p className="num text-lg leading-relaxed text-ink md:text-xl">
             ROAS<sub className="text-ink-faint">real</sub> = ROAS<sub className="text-ink-faint">reportado</sub>
@@ -341,7 +357,7 @@ function FraudSection() {
           <p className="mt-4 text-[11px] leading-relaxed text-ink-faint">
             Exemplo ilustrativo. A diferença entre escalar um vencedor de verdade e escalar um erro caro.
           </p>
-        </div>
+        </Reveal>
       </div>
     </section>
   );
@@ -388,32 +404,36 @@ function Offers() {
           Comece pequeno. Escale quando o número provar.
         </h2>
         <div className="mt-12 grid gap-4 md:grid-cols-3">
-          {OFFERS.map((o) => (
-            <article
-              key={o.name}
-              className={cn(
-                "flex flex-col rounded-xl border p-6",
-                o.featured ? "border-neon/40 bg-surface-2 shadow-neon" : "border-line bg-surface-2",
-              )}
-            >
-              {o.featured ? <p className="microlabel mb-3 text-neon">mais procurado</p> : <p className="microlabel mb-3">{o.cadence}</p>}
-              <h3 className="text-lg font-semibold text-ink">{o.name}</h3>
-              <p className="num mt-1 text-sm text-ink-mute">{o.price}</p>
-              <p className="mt-3 text-xs leading-relaxed text-ink-mute">{o.desc}</p>
-              <ul className="mt-4 flex flex-col gap-2 text-xs text-ink">
-                {o.bullets.map((b) => (
-                  <li key={b} className="flex items-start gap-2">
-                    <span aria-hidden className="mt-1 size-1 shrink-0 rounded-full bg-neon" />
-                    {b}
-                  </li>
-                ))}
-              </ul>
-              <Link href="#contato" className="mt-6">
-                <Button variant={o.featured ? "primary" : "outline"} className="w-full">
-                  {o.cta} →
-                </Button>
-              </Link>
-            </article>
+          {OFFERS.map((o, i) => (
+            <Reveal key={o.name} delay={i * 110}>
+              <article
+                className={cn(
+                  "relative flex h-full flex-col rounded-xl border p-6 transition-transform duration-200 hover:-translate-y-1",
+                  o.featured ? "border-neon/40 bg-surface-2" : "border-line bg-surface-2",
+                )}
+              >
+                {o.featured && (
+                  <span aria-hidden className="neon-pulse pointer-events-none absolute -inset-px rounded-xl shadow-neon" />
+                )}
+                {o.featured ? <p className="microlabel mb-3 text-neon">mais procurado</p> : <p className="microlabel mb-3">{o.cadence}</p>}
+                <h3 className="text-lg font-semibold text-ink">{o.name}</h3>
+                <p className="num mt-1 text-sm text-ink-mute">{o.price}</p>
+                <p className="mt-3 text-xs leading-relaxed text-ink-mute">{o.desc}</p>
+                <ul className="mt-4 flex flex-col gap-2 text-xs text-ink">
+                  {o.bullets.map((b) => (
+                    <li key={b} className="flex items-start gap-2">
+                      <span aria-hidden className="mt-1 size-1 shrink-0 rounded-full bg-neon" />
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+                <Link href="#contato" className="mt-6">
+                  <Button variant={o.featured ? "primary" : "outline"} className="w-full">
+                    {o.cta} →
+                  </Button>
+                </Link>
+              </article>
+            </Reveal>
           ))}
         </div>
         <p className="mt-6 text-center text-xs text-ink-faint">
@@ -430,7 +450,7 @@ function FinalCta() {
   return (
     <section id="contato" className="scroll-mt-20">
       <div className="mx-auto grid w-full max-w-6xl gap-12 px-5 py-20 md:grid-cols-[1fr_1.1fr]">
-        <div>
+        <Reveal>
           <p className="microlabel">Próximo passo</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-tight">
             Peça a análise gratuita do seu nicho.
@@ -450,10 +470,10 @@ function FinalCta() {
               <span aria-hidden className="size-1 rounded-full bg-neon" /> Vagas limitadas pela capacidade de operação
             </li>
           </ul>
-        </div>
-        <div className="rounded-xl border border-line bg-surface-2 p-6">
+        </Reveal>
+        <Reveal delay={130} className="rounded-xl border border-line bg-surface-2 p-6">
           <LeadForm />
-        </div>
+        </Reveal>
       </div>
     </section>
   );
