@@ -37,19 +37,27 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // Verificação local do JWT (sem round-trip) + refresh quando expirado.
-  const { data } = await supabase.auth.getClaims();
-  const isAuthenticated = Boolean(data?.claims?.sub);
+  let isAuthenticated = false;
+  try {
+    // Verificação local do JWT. Com chaves assimétricas (RS256) pode buscar
+    // JWKS na primeira chamada — try/catch impede que uma falha de rede
+    // derrube o proxy e retorne 500 para rotas públicas.
+    const { data } = await supabase.auth.getClaims();
+    isAuthenticated = Boolean(data?.claims?.sub);
+  } catch {
+    // Em caso de falha (timeout JWKS, rede, etc.) o proxy passa a requisição
+    // adiante; a DAL rejeita acessos protegidos na camada de autorização.
+  }
 
   const path = request.nextUrl.pathname;
   const isProtected = PROTECTED_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
 
   if (isProtected && !isAuthenticated) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.search = "";
-    url.searchParams.set("next", path);
-    return NextResponse.redirect(url);
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.search = "";
+    loginUrl.searchParams.set("next", path);
+    return NextResponse.redirect(loginUrl);
   }
 
   return response;
