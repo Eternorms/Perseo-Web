@@ -14,9 +14,13 @@ export async function updateSession(request: NextRequest) {
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anonKey) {
-    // Sem envs (ex.: preview sem secrets) o gate fica por conta da DAL,
-    // que redireciona qualquer rota protegida para /login.
+  if (!url || !anonKey || !URL.canParse(url)) {
+    // Sem envs válidas (ex.: preview sem secrets, URL sem https://) o gate
+    // fica por conta da DAL, que redireciona qualquer rota protegida para
+    // /login. Nunca derrubar o site público por configuração.
+    if (url && !URL.canParse(url)) {
+      console.error(`[proxy] NEXT_PUBLIC_SUPABASE_URL inválida ("${url}") — esperado https://<ref>.supabase.co`);
+    }
     return response;
   }
 
