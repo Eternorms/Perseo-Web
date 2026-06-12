@@ -11,6 +11,10 @@ const NAV = [
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col">
+      {/* sem JS o scroll-reveal nunca dispara — garante conteúdo visível */}
+      <noscript>
+        <style>{`.reveal{opacity:1 !important;transform:none !important}`}</style>
+      </noscript>
       <header className="fixed inset-x-0 top-0 z-40 border-b border-line glass">
         <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-6 px-5">
           <Link href="/" aria-label="Perseo — início">

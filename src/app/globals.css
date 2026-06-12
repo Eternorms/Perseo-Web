@@ -76,6 +76,41 @@
       opacity: 0.35;
     }
   }
+  @keyframes spark-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes glow-breathe {
+    0%,
+    100% {
+      opacity: 0.18;
+      transform: translateX(-50%) scale(1);
+    }
+    50% {
+      opacity: 0.32;
+      transform: translateX(-50%) scale(1.07);
+    }
+  }
+  @keyframes neon-breathe {
+    0%,
+    100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  @keyframes funnel-lit {
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes flow-dash {
+    to {
+      stroke-dashoffset: -32;
+    }
+  }
 }
 
 /* ── base ────────────────────────────────────────────────────────────── */
@@ -164,11 +199,73 @@ body {
   color: var(--color-ink-faint);
 }
 
+/* ── animações da landing ───────────────────────────────────────────── */
+
+/* scroll-reveal: oculto até o IntersectionObserver marcar visível */
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.6s var(--ease-out-fast),
+    transform 0.6s var(--ease-out-fast);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* sparkline desenhando da esquerda para a direita (requer pathLength=1) */
+.spark-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: spark-draw 1.2s var(--ease-out-fast) 0.5s forwards;
+}
+
+/* glow do hero respirando (transform/opacity — barato de compor) */
+.hero-glow {
+  animation: glow-breathe 7s ease-in-out infinite;
+}
+
+/* halo pulsante do card em destaque (opacity sobre camada própria) */
+.neon-pulse {
+  animation: neon-breathe 3.4s ease-in-out infinite;
+}
+
+/* funil: segmentos acendem em sequência quando a seção revela */
+.funnel-seg {
+  clip-path: polygon(
+    0 calc(50% - var(--hl) / 2),
+    100% calc(50% - var(--hr) / 2),
+    100% calc(50% + var(--hr) / 2),
+    0 calc(50% + var(--hl) / 2)
+  );
+  background: linear-gradient(180deg, rgba(0, 255, 65, 0.2), rgba(0, 255, 65, 0.04));
+  opacity: 0.18;
+}
+.is-visible .funnel-seg {
+  animation: funnel-lit 0.55s var(--ease-out-fast) forwards;
+  animation-delay: calc(var(--i) * 170ms + 250ms);
+}
+.funnel-label {
+  opacity: 0.25;
+}
+.is-visible .funnel-label {
+  animation: funnel-lit 0.55s var(--ease-out-fast) forwards;
+  animation-delay: calc(var(--i) * 170ms + 350ms);
+}
+
+/* linha de fluxo contínua atravessando o funil */
+.is-visible .flow-line {
+  animation: flow-dash 1.4s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
   }
 }
