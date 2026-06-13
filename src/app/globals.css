@@ -292,22 +292,28 @@ body {
 @keyframes mem-dot-glow {
   0%,
   100% {
-    fill-opacity: 0.2;
+    fill-opacity: 0.18;
+    transform: scale(1);
   }
   1.5% {
-    fill-opacity: 0.45;
+    fill-opacity: 0.5;
+    transform: scale(1.5);
   }
   4% {
     fill-opacity: 1;
+    transform: scale(2.4);
   }
   9% {
     fill-opacity: 1;
+    transform: scale(2.4);
   }
   12% {
-    fill-opacity: 0.45;
+    fill-opacity: 0.5;
+    transform: scale(1.5);
   }
   15% {
-    fill-opacity: 0.2;
+    fill-opacity: 0.18;
+    transform: scale(1);
   }
 }
 @keyframes mem-label-glow {
@@ -355,7 +361,9 @@ body {
 /* nó da etapa: acende em verde quando o ponto chega */
 .mem-step-dot {
   fill: rgba(0, 255, 65, 1);
-  fill-opacity: 0.2;
+  fill-opacity: 0.18;
+  transform-box: fill-box;
+  transform-origin: center;
   filter: drop-shadow(0 0 6px rgba(0, 255, 65, 0.85));
   animation: mem-dot-glow 15s ease-in-out infinite;
 }
@@ -372,7 +380,9 @@ body {
 /* ROAS em destaque: ponto e rótulo dourados (o resultado) */
 .mem-step-dot-gold {
   fill: rgba(255, 198, 70, 1);
-  fill-opacity: 0.25;
+  fill-opacity: 0.2;
+  transform-box: fill-box;
+  transform-origin: center;
   filter: drop-shadow(0 0 8px rgba(255, 180, 40, 0.95));
   animation: mem-dot-glow 15s ease-in-out infinite;
 }
