@@ -51,13 +51,13 @@ function Hero() {
       <div className="relative mx-auto w-full max-w-6xl px-5 pb-16 pt-20 text-center md:pt-28">
         <p className="microlabel animate-rise">Agência de growth full-funnel · D2C & e-commerce</p>
         <h1 className="mx-auto mt-5 max-w-3xl animate-rise text-4xl font-semibold leading-[1.08] tracking-tight [animation-delay:90ms] md:text-6xl">
-          Seu funil inteiro.
+          Da pesquisa ao ROAS.
           <br />
-          <span className="text-neon glow-neon">Um parceiro sênior.</span>
+          <span className="text-neon glow-neon">Uma máquina de decisão.</span>
         </h1>
         <p className="mx-auto mt-6 max-w-xl animate-rise text-base leading-relaxed text-ink-mute [animation-delay:180ms] md:text-lg">
-          Da inteligência de mercado aos criativos em imagem e vídeo, landing pages, automações,
-          agentes de IA, auditoria de fraude e agendamento. Um sistema de aquisição integrado, do anúncio à venda.
+          Pesquisa, criativo, mídia, landing page e relatório conectados em ciclos semanais.
+          Cada teste vira memória — para sua marca não começar do zero a cada nova campanha.
         </p>
         <div className="mt-9 flex animate-rise items-center justify-center gap-3 [animation-delay:270ms]">
           <Link href="#contato">
