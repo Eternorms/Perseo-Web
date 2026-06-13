@@ -259,43 +259,73 @@ body {
   animation: flow-dash 1.4s linear infinite;
 }
 
-/* grafo de memória do hero: conexões se desenham e nós pulsam em loop */
-@keyframes mem-draw {
+/* grafo de memória do hero: constelação fixa + pulsos de dados + pings */
+@keyframes mem-flow {
   0% {
     stroke-dashoffset: 1;
-    stroke-opacity: 0;
+    opacity: 0;
   }
-  25% {
-    stroke-opacity: 0.18;
+  12% {
+    opacity: 1;
   }
-  60% {
-    stroke-dashoffset: 0;
-    stroke-opacity: 0.18;
+  88% {
+    opacity: 1;
   }
   100% {
     stroke-dashoffset: 0;
-    stroke-opacity: 0;
+    opacity: 0;
   }
 }
 @keyframes mem-pulse {
   0%,
   100% {
-    fill-opacity: 0.16;
+    fill-opacity: 0.25;
   }
   50% {
-    fill-opacity: 0.48;
+    fill-opacity: 0.95;
   }
 }
-.mem-edge {
-  stroke: rgba(0, 255, 65, 1);
-  stroke-width: 1;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: mem-draw 8s ease-in-out infinite;
+@keyframes mem-ping {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.7;
+  }
+  70% {
+    opacity: 0;
+  }
+  100% {
+    transform: scale(3.4);
+    opacity: 0;
+  }
 }
+/* estrutura fixa da rede (constelação sutil sempre presente) */
+.mem-edge {
+  stroke: rgba(0, 255, 65, 0.1);
+  stroke-width: 1;
+}
+/* pulso de dados correndo por cada conexão (requer pathLength=1) */
+.mem-flow {
+  stroke: rgba(0, 255, 65, 0.9);
+  stroke-width: 1.5;
+  stroke-dasharray: 0.14 0.86;
+  stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.85));
+  animation: mem-flow 4.5s linear infinite;
+}
+/* nós da memória: brilho pulsante */
 .mem-node {
   fill: rgba(0, 255, 65, 1);
-  animation: mem-pulse 4s ease-in-out infinite;
+  filter: drop-shadow(0 0 5px rgba(0, 255, 65, 0.6));
+  animation: mem-pulse 3.6s ease-in-out infinite;
+}
+/* ping: anel que dispara a partir dos nós-hub */
+.mem-ping {
+  fill: none;
+  stroke: rgba(0, 255, 65, 0.7);
+  stroke-width: 1.2;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mem-ping 4s ease-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
