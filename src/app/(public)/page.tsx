@@ -56,7 +56,7 @@ function Hero() {
           <span className="text-neon glow-neon">Uma máquina de decisão.</span>
         </h1>
         <p className="mx-auto mt-6 max-w-xl animate-rise text-base leading-relaxed text-ink-mute [animation-delay:180ms] md:text-lg">
-          Pesquisa, criativo, mídia, landing page e relatório conectados em ciclos semanais.
+          Inteligência de mercado, criativo, mídia, landing e relatório conectados em ciclos semanais.
           Cada teste vira memória — para sua marca não começar do zero a cada nova campanha.
         </p>
         <div className="mt-9 flex animate-rise items-center justify-center gap-3 [animation-delay:270ms]">
