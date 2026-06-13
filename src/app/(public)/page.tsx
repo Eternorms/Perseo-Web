@@ -104,11 +104,30 @@ function Hero() {
           <circle className="mem-node" style={{ animationDelay: "2.8s" }} cx="880" cy="480" r="3.5" />
           <circle className="mem-node" style={{ animationDelay: "3.2s" }} cx="600" cy="60" r="3" />
           <circle className="mem-node" style={{ animationDelay: "0.6s" }} cx="680" cy="545" r="3" />
-          <circle className="mem-ping" style={{ animationDelay: "0s" }} cx="180" cy="250" r="5" />
-          <circle className="mem-ping" style={{ animationDelay: "1.3s" }} cx="1020" cy="270" r="5" />
-          <circle className="mem-ping" style={{ animationDelay: "2.6s" }} cx="240" cy="160" r="4" />
-          <circle className="mem-ping" style={{ animationDelay: "0.8s" }} cx="910" cy="340" r="4" />
-          <circle className="mem-ping" style={{ animationDelay: "3s" }} cx="290" cy="330" r="4" />
+          <g className="mem-step" style={{ animationDelay: "0s" }}>
+            <circle className="mem-step-dot" cx="240" cy="160" r="6" />
+            <text className="mem-step-label" x="224" y="165" textAnchor="end">PESQUISA</text>
+          </g>
+          <g className="mem-step" style={{ animationDelay: "1.1s" }}>
+            <circle className="mem-step-dot" cx="180" cy="250" r="6" />
+            <text className="mem-step-label" x="164" y="255" textAnchor="end">CRIATIVO</text>
+          </g>
+          <g className="mem-step" style={{ animationDelay: "2.2s" }}>
+            <circle className="mem-step-dot" cx="340" cy="470" r="6" />
+            <text className="mem-step-label" x="324" y="475" textAnchor="end">MÍDIA</text>
+          </g>
+          <g className="mem-step" style={{ animationDelay: "3.3s" }}>
+            <circle className="mem-step-dot" cx="910" cy="340" r="6" />
+            <text className="mem-step-label" x="926" y="345" textAnchor="start">LANDING</text>
+          </g>
+          <g className="mem-step" style={{ animationDelay: "4.4s" }}>
+            <circle className="mem-step-dot" cx="1020" cy="270" r="6" />
+            <text className="mem-step-label" x="1036" y="275" textAnchor="start">RELATÓRIO</text>
+          </g>
+          <g className="mem-step" style={{ animationDelay: "5.5s" }}>
+            <circle className="mem-step-dot" cx="1105" cy="130" r="6" />
+            <text className="mem-step-label" x="1121" y="135" textAnchor="start">ROAS</text>
+          </g>
         </svg>
       </div>
       <div className="relative mx-auto w-full max-w-6xl px-5 pb-16 pt-20 text-center md:pt-28">

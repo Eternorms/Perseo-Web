@@ -327,6 +327,33 @@ body {
   transform-origin: center;
   animation: mem-ping 4s ease-out infinite;
 }
+/* etapas nomeadas do funil: acendem em sequência (fluxo direcional) */
+@keyframes mem-step {
+  0%,
+  100% {
+    opacity: 0.22;
+  }
+  9% {
+    opacity: 1;
+  }
+  26% {
+    opacity: 0.22;
+  }
+}
+.mem-step {
+  animation: mem-step 7s ease-in-out infinite;
+}
+.mem-step-dot {
+  fill: rgba(0, 255, 65, 1);
+  filter: drop-shadow(0 0 6px rgba(0, 255, 65, 0.85));
+}
+.mem-step-label {
+  fill: rgba(0, 255, 65, 1);
+  font-family: var(--font-mono);
+  font-size: 17px;
+  letter-spacing: 0.12em;
+  filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.5));
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,
