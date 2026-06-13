@@ -274,17 +274,14 @@ body {
     stroke-dashoffset: 1;
     opacity: 0;
   }
-  4% {
+  1% {
     opacity: 1;
   }
-  17% {
+  9% {
     stroke-dashoffset: 0;
     opacity: 1;
   }
-  21% {
-    opacity: 0.5;
-  }
-  27% {
+  11% {
     opacity: 0;
   }
   100% {
@@ -295,41 +292,41 @@ body {
 @keyframes mem-dot-glow {
   0%,
   100% {
-    fill-opacity: 0.22;
+    fill-opacity: 0.2;
   }
-  3% {
-    fill-opacity: 0.5;
+  1.5% {
+    fill-opacity: 0.45;
   }
-  7% {
+  4% {
     fill-opacity: 1;
   }
-  17% {
+  9% {
     fill-opacity: 1;
   }
-  26% {
-    fill-opacity: 0.5;
+  12% {
+    fill-opacity: 0.45;
   }
-  36% {
-    fill-opacity: 0.22;
+  15% {
+    fill-opacity: 0.2;
   }
 }
 @keyframes mem-label-glow {
   0% {
     opacity: 0;
   }
-  3% {
+  1.5% {
     opacity: 0.3;
   }
-  7% {
+  4% {
     opacity: 1;
   }
-  18% {
+  9% {
     opacity: 1;
   }
-  26% {
+  11% {
     opacity: 0.4;
   }
-  32% {
+  13% {
     opacity: 0;
   }
   100% {
@@ -339,28 +336,28 @@ body {
 /* nós soltos: textura sutil de rede ao fundo */
 .mem-node {
   fill: rgba(0, 255, 65, 1);
-  animation: mem-node-pulse 5s ease-in-out infinite;
+  animation: mem-node-pulse 6s ease-in-out infinite;
 }
-/* caminho lógico do funil (sempre visível, sutil) */
 .mem-path {
   stroke: rgba(0, 255, 65, 0.16);
   stroke-width: 1;
 }
-/* pulso de dados percorrendo o caminho na ordem (requer pathLength=1) */
+/* ponto de luz percorrendo a rota (requer pathLength=1) */
 .mem-path-flow {
-  stroke: rgba(0, 255, 65, 0.95);
-  stroke-width: 1.5;
-  stroke-dasharray: 0.2 0.8;
+  stroke: rgba(0, 255, 65, 1);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 0.02 0.98;
   stroke-dashoffset: 1;
-  filter: drop-shadow(0 0 5px rgba(0, 255, 65, 0.9));
-  animation: mem-path-flow 10s ease-in-out infinite;
+  filter: drop-shadow(0 0 7px rgba(0, 255, 65, 1));
+  animation: mem-path-flow 15s linear infinite;
 }
-/* nó da etapa: acende em verde quando o pulso chega */
+/* nó da etapa: acende em verde quando o ponto chega */
 .mem-step-dot {
   fill: rgba(0, 255, 65, 1);
-  fill-opacity: 0.22;
+  fill-opacity: 0.2;
   filter: drop-shadow(0 0 6px rgba(0, 255, 65, 0.85));
-  animation: mem-dot-glow 10s ease-in-out infinite;
+  animation: mem-dot-glow 15s ease-in-out infinite;
 }
 /* rótulo da etapa: invisível até acender, em azul (contraste com a rede verde) */
 .mem-step-label {
@@ -370,14 +367,14 @@ body {
   letter-spacing: 0.16em;
   opacity: 0;
   filter: drop-shadow(0 0 5px rgba(120, 170, 255, 0.55));
-  animation: mem-label-glow 10s ease-in-out infinite;
+  animation: mem-label-glow 15s ease-in-out infinite;
 }
 /* ROAS em destaque: ponto e rótulo dourados (o resultado) */
 .mem-step-dot-gold {
   fill: rgba(255, 198, 70, 1);
   fill-opacity: 0.25;
   filter: drop-shadow(0 0 8px rgba(255, 180, 40, 0.95));
-  animation: mem-dot-glow 10s ease-in-out infinite;
+  animation: mem-dot-glow 15s ease-in-out infinite;
 }
 .mem-step-label-gold {
   fill: rgba(255, 212, 115, 1);
@@ -386,7 +383,7 @@ body {
   letter-spacing: 0.16em;
   opacity: 0;
   filter: drop-shadow(0 0 7px rgba(255, 180, 40, 0.7));
-  animation: mem-label-glow 10s ease-in-out infinite;
+  animation: mem-label-glow 15s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

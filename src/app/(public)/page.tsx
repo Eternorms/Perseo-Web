@@ -68,40 +68,40 @@ function Hero() {
           <circle className="mem-node" style={{ animationDelay: "3.3s" }} cx="1140" cy="500" r="2" />
           <circle className="mem-node" style={{ animationDelay: "1.8s" }} cx="1050" cy="560" r="2" />
           <circle className="mem-node" style={{ animationDelay: "0.9s" }} cx="1130" cy="585" r="2" />
-          <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "0.2s" }} x1="170" y1="460" x2="135" y2="290" />
-          <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "1.6s" }} x1="135" y1="290" x2="255" y2="150" />
-          <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "3s" }} x1="255" y1="150" x2="945" y2="150" />
-          <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "4.4s" }} x1="945" y1="150" x2="1080" y2="290" />
-          <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "5.8s" }} x1="1080" y1="290" x2="1050" y2="420" />
-          <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "7.2s" }} x1="1050" y1="420" x2="1000" y2="470" />
-          <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "8.6s" }} x1="1000" y1="470" x2="170" y2="460" />
+          <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "0.9s" }} x1="170" y1="460" x2="135" y2="290" />
+          <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "3s" }} x1="135" y1="290" x2="255" y2="150" />
+          <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "5.1s" }} x1="255" y1="150" x2="945" y2="150" />
+          <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "7.2s" }} x1="945" y1="150" x2="1080" y2="290" />
+          <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "9.3s" }} x1="1080" y1="290" x2="1050" y2="420" />
+          <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "11.4s" }} x1="1050" y1="420" x2="1000" y2="470" />
+          <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "13.8s" }} x1="1000" y1="470" x2="170" y2="460" />
           <g>
-            <circle className="mem-step-dot" style={{ animationDelay: "0.2s" }} cx="170" cy="460" r="5" />
-            <text className="mem-step-label" style={{ animationDelay: "0.2s" }} x="154" y="464" textAnchor="end">PESQUISA</text>
+            <circle className="mem-step-dot" style={{ animationDelay: "0.3s" }} cx="170" cy="460" r="5" />
+            <text className="mem-step-label" style={{ animationDelay: "0.3s" }} x="154" y="464" textAnchor="end">PESQUISA</text>
           </g>
           <g>
-            <circle className="mem-step-dot" style={{ animationDelay: "1.8s" }} cx="135" cy="290" r="5" />
-            <text className="mem-step-label" style={{ animationDelay: "1.8s" }} x="119" y="294" textAnchor="end">ESTRATÉGIA</text>
+            <circle className="mem-step-dot" style={{ animationDelay: "2.4s" }} cx="135" cy="290" r="5" />
+            <text className="mem-step-label" style={{ animationDelay: "2.4s" }} x="119" y="294" textAnchor="end">ESTRATÉGIA</text>
           </g>
           <g>
-            <circle className="mem-step-dot" style={{ animationDelay: "3.2s" }} cx="255" cy="150" r="5" />
-            <text className="mem-step-label" style={{ animationDelay: "3.2s" }} x="255" y="133" textAnchor="middle">CRIATIVOS</text>
+            <circle className="mem-step-dot" style={{ animationDelay: "4.5s" }} cx="255" cy="150" r="5" />
+            <text className="mem-step-label" style={{ animationDelay: "4.5s" }} x="255" y="133" textAnchor="middle">CRIATIVOS</text>
           </g>
           <g>
-            <circle className="mem-step-dot" style={{ animationDelay: "4.6s" }} cx="945" cy="150" r="5" />
-            <text className="mem-step-label" style={{ animationDelay: "4.6s" }} x="945" y="133" textAnchor="middle">ANÚNCIOS</text>
+            <circle className="mem-step-dot" style={{ animationDelay: "6.6s" }} cx="945" cy="150" r="5" />
+            <text className="mem-step-label" style={{ animationDelay: "6.6s" }} x="945" y="133" textAnchor="middle">ANÚNCIOS</text>
           </g>
           <g>
-            <circle className="mem-step-dot" style={{ animationDelay: "6s" }} cx="1080" cy="290" r="5" />
-            <text className="mem-step-label" style={{ animationDelay: "6s" }} x="1064" y="294" textAnchor="end">LANDING PAGES</text>
+            <circle className="mem-step-dot" style={{ animationDelay: "8.7s" }} cx="1080" cy="290" r="5" />
+            <text className="mem-step-label" style={{ animationDelay: "8.7s" }} x="1064" y="294" textAnchor="end">LANDING PAGES</text>
           </g>
           <g>
-            <circle className="mem-step-dot-gold" style={{ animationDelay: "7.4s" }} cx="1050" cy="420" r="6" />
-            <text className="mem-step-label-gold" style={{ animationDelay: "7.4s" }} x="1066" y="424" textAnchor="start">ROAS</text>
+            <circle className="mem-step-dot-gold" style={{ animationDelay: "10.8s" }} cx="1050" cy="420" r="6" />
+            <text className="mem-step-label-gold" style={{ animationDelay: "10.8s" }} x="1066" y="424" textAnchor="start">ROAS</text>
           </g>
           <g>
-            <circle className="mem-step-dot" style={{ animationDelay: "8.8s" }} cx="1000" cy="470" r="5" />
-            <text className="mem-step-label" style={{ animationDelay: "8.8s" }} x="1016" y="474" textAnchor="start">RELATÓRIO</text>
+            <circle className="mem-step-dot" style={{ animationDelay: "12.9s" }} cx="1000" cy="470" r="5" />
+            <text className="mem-step-label" style={{ animationDelay: "12.9s" }} x="1016" y="474" textAnchor="start">RELATÓRIO</text>
           </g>
         </svg>
       </div>
