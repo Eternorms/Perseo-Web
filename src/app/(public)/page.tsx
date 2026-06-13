@@ -142,9 +142,6 @@ function CommandCenterPreview() {
           ))}
         </div>
       </div>
-      <figcaption className="mt-3 text-center text-[11px] text-ink-faint">
-        Command center Perseo — cada criativo rastreado de hook a ROAS, ajustado por fraude.
-      </figcaption>
     </figure>
   );
 }
