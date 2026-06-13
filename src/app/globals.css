@@ -338,14 +338,14 @@ body {
   stroke-dasharray: 0.2 0.8;
   stroke-dashoffset: 1;
   filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.85));
-  animation: mem-path-flow 8s ease-in-out infinite;
+  animation: mem-path-flow 10s ease-in-out infinite;
 }
 /* nó da etapa: acende em verde quando o pulso chega */
 .mem-step-dot {
   fill: rgba(0, 255, 65, 1);
   fill-opacity: 0.22;
   filter: drop-shadow(0 0 6px rgba(0, 255, 65, 0.85));
-  animation: mem-dot-glow 8s ease-in-out infinite;
+  animation: mem-dot-glow 10s ease-in-out infinite;
 }
 /* rótulo da etapa: invisível até acender, em azul (contraste com a rede verde) */
 .mem-step-label {
@@ -355,7 +355,7 @@ body {
   letter-spacing: 0.16em;
   opacity: 0;
   filter: drop-shadow(0 0 5px rgba(120, 170, 255, 0.55));
-  animation: mem-label-glow 8s ease-in-out infinite;
+  animation: mem-label-glow 10s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
