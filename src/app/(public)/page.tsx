@@ -48,6 +48,44 @@ function Hero() {
         className="hero-glow pointer-events-none absolute left-1/2 top-0 h-[480px] w-[820px] rounded-full blur-3xl"
         style={{ background: "radial-gradient(closest-side, rgba(0,255,65,0.25), transparent)" }}
       />
+      <div className="mem-graph pointer-events-none absolute inset-0 opacity-80" aria-hidden>
+        <svg viewBox="0 0 1200 600" fill="none" preserveAspectRatio="xMidYMid slice" className="h-full w-full">
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "0s" }} x1="95" y1="120" x2="240" y2="160" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "1.2s" }} x1="95" y1="120" x2="180" y2="250" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "0.6s" }} x1="240" y1="160" x2="180" y2="250" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "2s" }} x1="240" y1="160" x2="290" y2="330" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "1.6s" }} x1="180" y1="250" x2="290" y2="330" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "2.4s" }} x1="180" y1="250" x2="120" y2="400" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "3s" }} x1="120" y1="400" x2="340" y2="470" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "3.6s" }} x1="290" y1="330" x2="340" y2="470" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "4.2s" }} x1="240" y1="160" x2="600" y2="60" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "4.8s" }} x1="600" y1="60" x2="965" y2="170" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "0.4s" }} x1="1105" y1="130" x2="965" y2="170" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "1s" }} x1="965" y1="170" x2="1020" y2="270" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "1.8s" }} x1="1105" y1="130" x2="1020" y2="270" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "2.2s" }} x1="1020" y1="270" x2="910" y2="340" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "2.8s" }} x1="965" y1="170" x2="910" y2="340" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "3.4s" }} x1="910" y1="340" x2="880" y2="480" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "3.8s" }} x1="1020" y1="270" x2="1130" y2="420" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "4.4s" }} x1="880" y1="480" x2="1130" y2="420" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "5s" }} x1="340" y1="470" x2="680" y2="545" />
+          <line className="mem-edge" pathLength="1" style={{ animationDelay: "5.4s" }} x1="680" y1="545" x2="880" y2="480" />
+          <circle className="mem-node" style={{ animationDelay: "0s" }} cx="95" cy="120" r="4" />
+          <circle className="mem-node" style={{ animationDelay: "0.5s" }} cx="180" cy="250" r="5" />
+          <circle className="mem-node" style={{ animationDelay: "1s" }} cx="120" cy="400" r="3.5" />
+          <circle className="mem-node" style={{ animationDelay: "1.5s" }} cx="290" cy="330" r="4" />
+          <circle className="mem-node" style={{ animationDelay: "2s" }} cx="240" cy="160" r="4.5" />
+          <circle className="mem-node" style={{ animationDelay: "2.5s" }} cx="340" cy="470" r="3.5" />
+          <circle className="mem-node" style={{ animationDelay: "0.3s" }} cx="1105" cy="130" r="4" />
+          <circle className="mem-node" style={{ animationDelay: "0.8s" }} cx="1020" cy="270" r="5" />
+          <circle className="mem-node" style={{ animationDelay: "1.3s" }} cx="1130" cy="420" r="3.5" />
+          <circle className="mem-node" style={{ animationDelay: "1.8s" }} cx="910" cy="340" r="4.5" />
+          <circle className="mem-node" style={{ animationDelay: "2.3s" }} cx="965" cy="170" r="4" />
+          <circle className="mem-node" style={{ animationDelay: "2.8s" }} cx="880" cy="480" r="3.5" />
+          <circle className="mem-node" style={{ animationDelay: "3.2s" }} cx="600" cy="60" r="3" />
+          <circle className="mem-node" style={{ animationDelay: "3.6s" }} cx="680" cy="545" r="3" />
+        </svg>
+      </div>
       <div className="relative mx-auto w-full max-w-6xl px-5 pb-16 pt-20 text-center md:pt-28">
         <p className="microlabel animate-rise">Agência de growth full-funnel · D2C & e-commerce</p>
         <h1 className="mx-auto mt-5 max-w-3xl animate-rise text-4xl font-semibold leading-[1.08] tracking-tight [animation-delay:90ms] md:text-6xl">

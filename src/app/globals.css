@@ -259,6 +259,45 @@ body {
   animation: flow-dash 1.4s linear infinite;
 }
 
+/* grafo de memória do hero: conexões se desenham e nós pulsam em loop */
+@keyframes mem-draw {
+  0% {
+    stroke-dashoffset: 1;
+    stroke-opacity: 0;
+  }
+  25% {
+    stroke-opacity: 0.18;
+  }
+  60% {
+    stroke-dashoffset: 0;
+    stroke-opacity: 0.18;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    stroke-opacity: 0;
+  }
+}
+@keyframes mem-pulse {
+  0%,
+  100% {
+    fill-opacity: 0.16;
+  }
+  50% {
+    fill-opacity: 0.48;
+  }
+}
+.mem-edge {
+  stroke: rgba(0, 255, 65, 1);
+  stroke-width: 1;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: mem-draw 8s ease-in-out infinite;
+}
+.mem-node {
+  fill: rgba(0, 255, 65, 1);
+  animation: mem-pulse 4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
