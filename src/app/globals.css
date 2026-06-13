@@ -319,24 +319,29 @@ body {
 @keyframes mem-label-glow {
   0% {
     opacity: 0;
+    transform: translateY(6px);
   }
   1.5% {
     opacity: 0.3;
   }
   4% {
     opacity: 1;
+    transform: translateY(0);
   }
   9% {
     opacity: 1;
+    transform: translateY(0);
   }
   11% {
     opacity: 0.4;
   }
   13% {
     opacity: 0;
+    transform: translateY(-4px);
   }
   100% {
     opacity: 0;
+    transform: translateY(6px);
   }
 }
 /* nós soltos: textura sutil de rede ao fundo */
@@ -353,9 +358,9 @@ body {
   stroke: rgba(0, 255, 65, 1);
   stroke-width: 3;
   stroke-linecap: round;
-  stroke-dasharray: 0.02 0.98;
+  stroke-dasharray: 0.045 0.955;
   stroke-dashoffset: 1;
-  filter: drop-shadow(0 0 7px rgba(0, 255, 65, 1));
+  filter: drop-shadow(0 0 9px rgba(0, 255, 65, 1));
   animation: mem-path-flow 15s linear infinite;
 }
 /* nó da etapa: acende em verde quando o ponto chega */
@@ -374,6 +379,8 @@ body {
   font-size: 13px;
   letter-spacing: 0.16em;
   opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
   filter: drop-shadow(0 0 5px rgba(120, 170, 255, 0.55));
   animation: mem-label-glow 15s ease-in-out infinite;
 }
@@ -392,6 +399,8 @@ body {
   font-size: 13px;
   letter-spacing: 0.16em;
   opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
   filter: drop-shadow(0 0 7px rgba(255, 180, 40, 0.7));
   animation: mem-label-glow 15s ease-in-out infinite;
 }
