@@ -356,11 +356,11 @@ body {
 /* ponto de luz percorrendo a rota (requer pathLength=1) */
 .mem-path-flow {
   stroke: rgba(0, 255, 65, 1);
-  stroke-width: 3;
+  stroke-width: 2.5;
   stroke-linecap: round;
-  stroke-dasharray: 0.045 0.955;
+  stroke-dasharray: 0.012 0.988;
   stroke-dashoffset: 1;
-  filter: drop-shadow(0 0 9px rgba(0, 255, 65, 1));
+  filter: drop-shadow(0 0 6px rgba(0, 255, 65, 1));
   animation: mem-path-flow 15s linear infinite;
 }
 /* nó da etapa: acende em verde quando o ponto chega */
