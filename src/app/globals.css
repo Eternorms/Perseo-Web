@@ -274,14 +274,17 @@ body {
     stroke-dashoffset: 1;
     opacity: 0;
   }
-  3% {
+  4% {
     opacity: 1;
   }
-  16% {
+  17% {
     stroke-dashoffset: 0;
     opacity: 1;
   }
-  22% {
+  21% {
+    opacity: 0.5;
+  }
+  27% {
     opacity: 0;
   }
   100% {
@@ -294,13 +297,19 @@ body {
   100% {
     fill-opacity: 0.22;
   }
-  4% {
+  3% {
+    fill-opacity: 0.5;
+  }
+  7% {
     fill-opacity: 1;
   }
-  16% {
+  17% {
     fill-opacity: 1;
   }
-  30% {
+  26% {
+    fill-opacity: 0.5;
+  }
+  36% {
     fill-opacity: 0.22;
   }
 }
@@ -308,13 +317,19 @@ body {
   0% {
     opacity: 0;
   }
-  4% {
+  3% {
+    opacity: 0.3;
+  }
+  7% {
     opacity: 1;
   }
-  16% {
+  18% {
     opacity: 1;
   }
-  24% {
+  26% {
+    opacity: 0.4;
+  }
+  32% {
     opacity: 0;
   }
   100% {
@@ -337,7 +352,7 @@ body {
   stroke-width: 1.5;
   stroke-dasharray: 0.2 0.8;
   stroke-dashoffset: 1;
-  filter: drop-shadow(0 0 4px rgba(0, 255, 65, 0.85));
+  filter: drop-shadow(0 0 5px rgba(0, 255, 65, 0.9));
   animation: mem-path-flow 10s ease-in-out infinite;
 }
 /* nó da etapa: acende em verde quando o pulso chega */
@@ -355,6 +370,22 @@ body {
   letter-spacing: 0.16em;
   opacity: 0;
   filter: drop-shadow(0 0 5px rgba(120, 170, 255, 0.55));
+  animation: mem-label-glow 10s ease-in-out infinite;
+}
+/* ROAS em destaque: ponto e rótulo dourados (o resultado) */
+.mem-step-dot-gold {
+  fill: rgba(255, 198, 70, 1);
+  fill-opacity: 0.25;
+  filter: drop-shadow(0 0 8px rgba(255, 180, 40, 0.95));
+  animation: mem-dot-glow 10s ease-in-out infinite;
+}
+.mem-step-label-gold {
+  fill: rgba(255, 212, 115, 1);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  opacity: 0;
+  filter: drop-shadow(0 0 7px rgba(255, 180, 40, 0.7));
   animation: mem-label-glow 10s ease-in-out infinite;
 }
 
