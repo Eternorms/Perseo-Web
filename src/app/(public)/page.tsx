@@ -51,20 +51,23 @@ function Hero() {
       <div className="mem-graph pointer-events-none absolute inset-0" aria-hidden>
         <svg viewBox="0 0 1200 600" fill="none" preserveAspectRatio="xMidYMid slice" className="h-full w-full" style={{ overflow: "visible" }}>
           <circle className="mem-node" style={{ animationDelay: "0s" }} cx="70" cy="80" r="2.5" />
-          <circle className="mem-node" style={{ animationDelay: "1.4s" }} cx="60" cy="540" r="2" />
-          <circle className="mem-node" style={{ animationDelay: "0.7s" }} cx="300" cy="580" r="2" />
-          <circle className="mem-node" style={{ animationDelay: "2.1s" }} cx="620" cy="80" r="2" />
-          <circle className="mem-node" style={{ animationDelay: "1.1s" }} cx="1175" cy="95" r="2.5" />
-          <circle className="mem-node" style={{ animationDelay: "2.8s" }} cx="1180" cy="400" r="2" />
-          <circle className="mem-node" style={{ animationDelay: "1.8s" }} cx="1130" cy="580" r="2" />
+          <circle className="mem-node" style={{ animationDelay: "2.3s" }} cx="150" cy="185" r="2" />
+          <circle className="mem-node" style={{ animationDelay: "1.4s" }} cx="60" cy="360" r="2.5" />
+          <circle className="mem-node" style={{ animationDelay: "3.1s" }} cx="95" cy="540" r="2" />
+          <circle className="mem-node" style={{ animationDelay: "0.7s" }} cx="245" cy="505" r="2" />
+          <circle className="mem-node" style={{ animationDelay: "4s" }} cx="300" cy="580" r="2" />
+          <circle className="mem-node" style={{ animationDelay: "1.9s" }} cx="420" cy="90" r="2" />
+          <circle className="mem-node" style={{ animationDelay: "2.1s" }} cx="560" cy="70" r="2" />
+          <circle className="mem-node" style={{ animationDelay: "3.6s" }} cx="640" cy="140" r="2" />
+          <circle className="mem-node" style={{ animationDelay: "0.5s" }} cx="780" cy="75" r="2" />
+          <circle className="mem-node" style={{ animationDelay: "2.7s" }} cx="900" cy="95" r="2" />
           <circle className="mem-node" style={{ animationDelay: "0.4s" }} cx="1000" cy="90" r="2" />
-          <line className="mem-path" x1="170" y1="460" x2="135" y2="290" />
-          <line className="mem-path" x1="135" y1="290" x2="255" y2="150" />
-          <line className="mem-path" x1="255" y1="150" x2="945" y2="150" />
-          <line className="mem-path" x1="945" y1="150" x2="1080" y2="290" />
-          <line className="mem-path" x1="1080" y1="290" x2="1050" y2="420" />
-          <line className="mem-path" x1="1050" y1="420" x2="1000" y2="470" />
-          <line className="mem-path" x1="1000" y1="470" x2="170" y2="460" />
+          <circle className="mem-node" style={{ animationDelay: "4.4s" }} cx="1090" cy="185" r="2" />
+          <circle className="mem-node" style={{ animationDelay: "1.1s" }} cx="1175" cy="95" r="2.5" />
+          <circle className="mem-node" style={{ animationDelay: "2.8s" }} cx="1180" cy="370" r="2" />
+          <circle className="mem-node" style={{ animationDelay: "3.3s" }} cx="1140" cy="500" r="2" />
+          <circle className="mem-node" style={{ animationDelay: "1.8s" }} cx="1050" cy="560" r="2" />
+          <circle className="mem-node" style={{ animationDelay: "0.9s" }} cx="1130" cy="585" r="2" />
           <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "0.2s" }} x1="170" y1="460" x2="135" y2="290" />
           <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "1.6s" }} x1="135" y1="290" x2="255" y2="150" />
           <line className="mem-path-flow" pathLength="1" style={{ animationDelay: "3s" }} x1="255" y1="150" x2="945" y2="150" />
