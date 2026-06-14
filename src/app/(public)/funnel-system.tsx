@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, type CSSProperties } from "react";
+import { Fragment, useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -156,6 +156,63 @@ function clipFor(top: number, bot: number) {
   return `polygon(${lt}% 0, ${100 - lt}% 0, ${100 - lb}% 100%, ${lb}% 100%)`;
 }
 
+/* carrossel horizontal: mostra 1 card por vez e troca sozinho (pausa no hover).
+ * Permite mais conteúdo por etapa sem aumentar a altura do painel. */
+function CapabilityCarousel({ items, accent }: { items: Capability[]; accent: string }) {
+  const [idx, setIdx] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const count = items.length;
+
+  useEffect(() => {
+    if (paused || count <= 1) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setInterval(() => setIdx((i) => (i + 1) % count), 3600);
+    return () => clearInterval(t);
+  }, [paused, count]);
+
+  return (
+    <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      <div className="overflow-hidden">
+        <div
+          className="flex transition-transform duration-500 ease-out"
+          style={{ transform: `translateX(-${idx * 100}%)` }}
+        >
+          {items.map((c) => (
+            <article key={c.title} className="w-full shrink-0">
+              <div className="flex h-full items-start gap-3 rounded-lg border border-line bg-surface-2 p-4">
+                <span
+                  className="grid size-9 shrink-0 place-items-center rounded-md"
+                  style={{ background: `${accent}1f`, border: `1px solid ${accent}3a` }}
+                >
+                  <c.icon className="size-4" style={{ color: accent }} aria-hidden />
+                </span>
+                <div>
+                  <h4 className="text-[13px] font-semibold text-ink">{c.title}</h4>
+                  <p className="mt-1 text-[11px] leading-relaxed text-ink-mute">{c.desc}</p>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+      {count > 1 && (
+        <div className="mt-3 flex items-center justify-center gap-1.5">
+          {items.map((c, k) => (
+            <button
+              key={c.title}
+              type="button"
+              onClick={() => setIdx(k)}
+              aria-label={`Mostrar card ${k + 1} de ${count}`}
+              className="h-1.5 rounded-full transition-all duration-300"
+              style={{ width: k === idx ? "20px" : "6px", background: k === idx ? accent : "rgba(255,255,255,0.18)" }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function FunnelSystem() {
   const [active, setActive] = useState(0);
 
@@ -290,14 +347,8 @@ export function FunnelSystem() {
                           → <span className="text-ink">{s.outcome}</span>
                         </p>
 
-                        <div className="mt-3.5 grid grid-cols-1 gap-2.5 @md:grid-cols-2">
-                          {s.capabilities.map((c) => (
-                            <article key={c.title} className="rounded-lg border border-line bg-surface-2 p-3">
-                              <c.icon className="size-4 text-neon" aria-hidden />
-                              <h4 className="mt-2 text-[13px] font-semibold text-ink">{c.title}</h4>
-                              <p className="mt-1 text-[11px] leading-relaxed text-ink-mute">{c.desc}</p>
-                            </article>
-                          ))}
+                        <div className="mt-3.5">
+                          <CapabilityCarousel key={s.n} items={s.capabilities} accent={color} />
                         </div>
 
                         {s.fraud && (
