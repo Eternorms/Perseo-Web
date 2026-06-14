@@ -11,7 +11,7 @@ import {
   Workflow,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Sparkline } from "@/components/charts/sparkline";
+import { CommandCenter } from "./command-center";
 import { LeadForm } from "./lead-form";
 import { Reveal } from "./reveal";
 import { FunnelFlow } from "./funnel-flow";
@@ -129,77 +129,9 @@ function Hero() {
           </Link>
         </div>
 
-        <CommandCenterPreview />
+        <CommandCenter />
       </div>
     </section>
-  );
-}
-
-/** Ilustração do produto — valores demonstrativos, não dados de cliente. */
-function CommandCenterPreview() {
-  const kpis = [
-    { label: "ROAS AJUSTADO", value: "3.40×", delta: "▲ 9,6%", good: true },
-    { label: "CPA", value: "R$ 39,80", delta: "▼ 11,4%", good: true },
-    { label: "HOOK RATE", value: "32,8%", delta: "▲ 4,2%", good: true },
-    { label: "FRAUDE", value: "5,6%", delta: "▼ 1,9%", good: true },
-  ];
-  return (
-    <figure aria-hidden className="mx-auto mt-16 max-w-4xl animate-rise text-left [animation-delay:360ms]">
-      <div className="overflow-hidden rounded-xl border border-line-strong bg-surface-1 shadow-2xl shadow-black/60">
-        <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
-          <span className="microlabel">perseo · command center</span>
-          <span className="flex items-center gap-1.5 text-[11px] text-neon">
-            <span className="size-1.5 rounded-full bg-neon animate-live" />
-            live
-          </span>
-        </div>
-        <div className="grid grid-cols-2 divide-x divide-line border-b border-line md:grid-cols-4">
-          {kpis.map((k) => (
-            <div key={k.label} className="px-4 py-3.5">
-              <div className="microlabel">{k.label}</div>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="num text-lg text-ink">{k.value}</span>
-                <span className={cn("num text-[11px]", k.good ? "text-neon" : "text-loss")}>{k.delta}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="hidden divide-y divide-line md:block">
-          {[
-            { name: "UGC-014 · dor → rotina", status: "VENCEDOR", roas: "4.02×", pts: [2, 3, 2.8, 3.4, 3.9, 4.0] },
-            { name: "UGC-019 · prova social", status: "TESTE", roas: "2.31×", pts: [1.5, 1.8, 2.4, 2.1, 2.2, 2.3] },
-            { name: "UGC-021 · unboxing POV", status: "TESTE", roas: "1.87×", pts: [1, 1.6, 1.4, 1.9, 1.8, 1.9] },
-          ].map((row, i) => (
-            <div
-              key={row.name}
-              className="flex animate-rise items-center justify-between gap-4 px-4 py-2.5"
-              style={{ animationDelay: `${480 + i * 140}ms` }}
-            >
-              <span className="num truncate text-xs text-ink-mute">{row.name}</span>
-              <span className="flex items-center gap-5">
-                <Sparkline
-                  points={row.pts}
-                  width={88}
-                  height={22}
-                  color={row.status === "VENCEDOR" ? "#00FF41" : "#5BA3FF"}
-                  draw
-                  drawDelay={i * 200}
-                />
-                <span
-                  className={cn(
-                    "num rounded-sm border px-1.5 py-0.5 text-[10px]",
-                    row.status === "VENCEDOR" ? "border-neon/30 bg-neon/10 text-neon" : "border-line-strong text-ink-faint",
-                  )}
-                >
-                  {row.status}
-                </span>
-                <span className="num w-14 text-right text-xs text-ink">{row.roas}</span>
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </figure>
   );
 }
 

@@ -405,6 +405,84 @@ body {
   animation: mem-label-glow 15s ease-in-out infinite backwards;
 }
 
+/* ── Command Center interativo (mini-jogo de gestor) ─────────────────── */
+.cc-row {
+  transition:
+    background-color 0.2s ease,
+    opacity 0.35s var(--ease-out-fast);
+}
+.cc-row-enter {
+  animation: cc-enter 0.45s var(--ease-out-fast) both;
+}
+.cc-row-leaving {
+  animation: cc-leave 0.44s var(--ease-out-fast) forwards;
+  pointer-events: none;
+  overflow: hidden;
+}
+@keyframes cc-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes cc-leave {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+    max-height: 60px;
+  }
+  55% {
+    opacity: 0;
+    transform: translateX(24px);
+    max-height: 60px;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(24px);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+/* botão Escalar pulsando — convite à ação */
+.cc-scale-pulse {
+  animation: cc-pulse 1.7s ease-in-out infinite;
+}
+@keyframes cc-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 65, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(0, 255, 65, 0.16);
+  }
+}
+/* linha caindo — clicável pra pausar */
+.cc-row-fall {
+  background: rgba(255, 61, 90, 0.05);
+}
+.cc-row-fall:hover {
+  background: rgba(255, 61, 90, 0.12);
+}
+/* card-recompensa subindo sobre o painel */
+.cc-reward {
+  animation: cc-reward-rise 0.5s var(--ease-out-fast) both;
+}
+@keyframes cc-reward-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
