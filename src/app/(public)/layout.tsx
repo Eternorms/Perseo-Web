@@ -3,8 +3,7 @@ import { Logo } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 
 const NAV = [
-  { href: "/#metodologia", label: "Metodologia" },
-  { href: "/#capacidades", label: "Capacidades" },
+  { href: "/#funil", label: "Metodologia" },
   { href: "/#ofertas", label: "Ofertas" },
 ];
 

@@ -1,20 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  Activity,
-  BrainCircuit,
-  Clapperboard,
-  FileBarChart,
-  Network,
-  Radar,
-  ShieldAlert,
-  Workflow,
-} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CommandCenter } from "./command-center";
+import { FunnelSystem } from "./funnel-system";
 import { LeadForm } from "./lead-form";
 import { Reveal } from "./reveal";
-import { FunnelFlow } from "./funnel-flow";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -28,9 +18,7 @@ export default function LandingPage() {
     <>
       <Hero />
       <PainStrip />
-      <Methodology />
-      <Capabilities />
-      <FraudSection />
+      <FunnelSystem />
       <Offers />
       <FinalCta />
     </>
@@ -164,185 +152,6 @@ function PainStrip() {
             <li>→ ROAS auditado contra fraude antes de qualquer decisão.</li>
             <li>→ Velocidade de squad, senioridade de partner. Alavancado por IA.</li>
           </ul>
-        </Reveal>
-      </div>
-    </section>
-  );
-}
-
-/* ── Metodologia ─────────────────────────────────────────────────────── */
-
-const PHASES = [
-  {
-    n: "01",
-    title: "Inteligência de mercado",
-    desc: "Varremos a Meta Ad Library dos seus concorrentes: ângulos, hooks, ofertas e frequência de teste. Você começa sabendo o que já funciona no seu nicho.",
-  },
-  {
-    n: "02",
-    title: "Criativos UGC em escala",
-    desc: "Roteiros de direct response gerados sobre a pesquisa, produção 9:16 com avatares e edição AI-first. Volume de teste semanal, não mensal.",
-  },
-  {
-    n: "03",
-    title: "Distribuição & landing",
-    desc: "Publicação orgânica e paga, landing pages que sustentam a promessa do criativo e capturam o lead sem atrito.",
-  },
-  {
-    n: "04",
-    title: "Tracking anti-fraude",
-    desc: "CPA, hook rate e ROAS por criativo — com auditoria de cliques fraudulentos. Decisão sobre número limpo, não inflado.",
-  },
-  {
-    n: "05",
-    title: "Relatório que decide",
-    desc: "Relatório mensal automático: vencedores, perdedores, aprendizados no Knowledge Graph e o plano do próximo ciclo.",
-  },
-];
-
-function Methodology() {
-  return (
-    <section id="metodologia" className="scroll-mt-20 border-b border-line">
-      <div className="mx-auto w-full max-w-6xl px-5 py-20">
-        <Reveal>
-          <p className="microlabel">Metodologia</p>
-          <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight">
-            Full-funnel de verdade: cada fase alimenta a próxima.
-          </h2>
-          <FunnelFlow />
-        </Reveal>
-        <div className="mt-12 grid gap-px overflow-hidden rounded-lg border border-line bg-line md:grid-cols-5">
-          {PHASES.map((p, i) => (
-            <Reveal key={p.n} delay={i * 80}>
-              <article className="h-full bg-surface-2 p-5 transition-colors hover:bg-surface-3">
-                <span className="num text-[11px] text-neon">{p.n}</span>
-                <h3 className="mt-2 text-sm font-semibold text-ink">{p.title}</h3>
-                <p className="mt-2 text-xs leading-relaxed text-ink-mute">{p.desc}</p>
-              </article>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ── Capacidades (bento) ─────────────────────────────────────────────── */
-
-const CAPABILITIES = [
-  {
-    icon: Radar,
-    title: "Espionagem de concorrentes",
-    desc: "Coleta contínua da Meta Ad Library — quais ângulos seus concorrentes escalam e quais abandonam.",
-    span: "md:col-span-2",
-  },
-  {
-    icon: Clapperboard,
-    title: "Vídeo 9:16 nativo",
-    desc: "UGC com avatares de IA, hooks testáveis em lote.",
-    span: "",
-  },
-  {
-    icon: ShieldAlert,
-    title: "Auditoria de fraude",
-    desc: "fraud_rate e cliques inválidos medidos por campanha.",
-    span: "",
-  },
-  {
-    icon: Activity,
-    title: "Tracking por criativo",
-    desc: "Hook rate, CPA e ROAS de cada vídeo — o vencedor é matemático, não opinião.",
-    span: "md:col-span-2",
-  },
-  {
-    icon: BrainCircuit,
-    title: "Roteiros por IA",
-    desc: "Dezenas de variações de ângulo e hook por ciclo, sobre a dor real da audiência.",
-    span: "md:col-span-2",
-  },
-  {
-    icon: Network,
-    title: "Knowledge Graph",
-    desc: "Cada teste vira memória: dor → ângulo → hook → resultado.",
-    span: "",
-  },
-  {
-    icon: Workflow,
-    title: "Funil integrado",
-    desc: "Lead do anúncio ao agendamento, com follow-up automático.",
-    span: "",
-  },
-  {
-    icon: FileBarChart,
-    title: "Relatório automático",
-    desc: "Mensal, por escrito, com decisão — não um PDF de vaidade.",
-    span: "md:col-span-2",
-  },
-];
-
-function Capabilities() {
-  return (
-    <section id="capacidades" className="scroll-mt-20 border-b border-line bg-surface-1">
-      <div className="mx-auto w-full max-w-6xl px-5 py-20">
-        <Reveal>
-          <p className="microlabel">Capacidades</p>
-          <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight">
-            O stack que cobre ~80% do seu funil de aquisição.
-          </h2>
-        </Reveal>
-        <div className="mt-12 grid gap-4 md:grid-cols-4">
-          {CAPABILITIES.map((c, i) => (
-            <Reveal key={c.title} delay={i * 60} className={c.span}>
-              <article className="h-full rounded-lg border border-line bg-surface-2 p-5 transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-line-strong">
-                <c.icon className="size-5 text-neon" aria-hidden />
-                <h3 className="mt-3 text-sm font-semibold text-ink">{c.title}</h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-ink-mute">{c.desc}</p>
-              </article>
-            </Reveal>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ── Fraude ──────────────────────────────────────────────────────────── */
-
-function FraudSection() {
-  return (
-    <section className="border-b border-line">
-      <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-5 py-20 md:grid-cols-2">
-        <Reveal>
-          <p className="microlabel text-loss">Auditoria de fraude</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-tight">Quanto do seu ROAS é mentira?</h2>
-          <p className="mt-4 max-w-md text-sm leading-relaxed text-ink-mute">
-            Cliques de bot e tráfego inválido inflam métricas e queimam orçamento em silêncio.
-            Toda conta Perseo roda com auditoria de fraude contínua — e todo ROAS que você vê
-            já está ajustado pela taxa de fraude medida.
-          </p>
-          <Link href="#contato" className="mt-6 inline-block">
-            <Button variant="outline">Auditar minha conta →</Button>
-          </Link>
-        </Reveal>
-        <Reveal delay={130} className="rounded-xl border border-line-strong bg-surface-2 p-6">
-          <p className="microlabel mb-4">fórmula de decisão</p>
-          <p className="num text-lg leading-relaxed text-ink md:text-xl">
-            ROAS<sub className="text-ink-faint">real</sub> = ROAS<sub className="text-ink-faint">reportado</sub>
-          </p>
-          <p className="num mt-1 text-lg leading-relaxed text-neon md:text-xl">× (1 − fraud_rate)</p>
-          <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line bg-line">
-            <div className="bg-surface-1 p-4">
-              <p className="microlabel">reportado pela plataforma</p>
-              <p className="num mt-1 text-2xl text-ink">3.40×</p>
-            </div>
-            <div className="bg-surface-1 p-4">
-              <p className="microlabel">com 12% de fraude</p>
-              <p className="num mt-1 text-2xl text-loss">2.99×</p>
-            </div>
-          </div>
-          <p className="mt-4 text-[11px] leading-relaxed text-ink-faint">
-            Exemplo ilustrativo. A diferença entre escalar um vencedor de verdade e escalar um erro caro.
-          </p>
         </Reveal>
       </div>
     </section>
