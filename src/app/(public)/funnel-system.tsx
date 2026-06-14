@@ -22,10 +22,10 @@ import { cn } from "@/lib/utils";
 
 /**
  * Funil integrado — funde Metodologia + Capacidades + Auditoria de fraude
- * num funil visual interativo. As etapas são barras em TRAPÉZIO empilhadas
- * (gradiente verde → ciano) cujos lados retos e contínuos formam um
- * triângulo invertido. Passar o mouse / focar / clicar numa etapa abre um
- * painel com as capacidades + o resultado dela logo abaixo da barra. A
+ * num funil visual interativo. Cada etapa é uma barra em TRAPÉZIO; quando
+ * uma etapa abre, o painel de conteúdo também é um TRAPÉZIO que dá
+ * continuidade ao afunilamento (as barras abaixo estreitam pra fechar o
+ * triângulo sem degrau). Passar o mouse / focar / clicar abre a etapa. A
  * etapa 04 carrega a fórmula de ROAS ajustado por fraude.
  */
 
@@ -140,23 +140,43 @@ const STAGES: Stage[] = [
 
 /* gradiente do funil: verde neon (topo) → ciano (fundo) */
 const COLORS = ["#00FF55", "#00EFA0", "#00DED6", "#23CCEE", "#54B2FF"];
-/* larguras (% do container) em degraus IGUAIS → lados retos e contínuos.
- * topo de cada barra = TOPW[i]; base = TOPW[i+1] (a última fecha em 34). */
-const TOPW = [100, 86.8, 73.6, 60.4, 47.2];
-const BOTW = [86.8, 73.6, 60.4, 47.2, 34];
 const INK = "#04130a";
 
-/* clip-path trapézio: topo largura TOPW[i], base largura BOTW[i], centrado */
-function clipFor(i: number) {
-  const lt = (100 - TOPW[i]) / 2;
-  const rt = 100 - lt;
-  const lb = (100 - BOTW[i]) / 2;
-  const rb = 100 - lb;
-  return `polygon(${lt}% 0, ${rt}% 0, ${rb}% 100%, ${lb}% 100%)`;
+/* afunilamento: cada barra perde STEP%; o painel aberto perde PANEL_DROP%.
+ * Como total = 5×STEP + PANEL_DROP é constante, a silhueta do triângulo é
+ * sempre a mesma (100% → 37%); só a "barriga" do painel desliza p/ a etapa
+ * ativa, e as barras abaixo estreitam pra fechar o triângulo. */
+const STEP = 9;
+const PANEL_DROP = 18;
+
+/* clip-path de trapézio centrado: topo `top%`, base `bot%` */
+function clipFor(top: number, bot: number) {
+  const lt = (100 - top) / 2;
+  const lb = (100 - bot) / 2;
+  return `polygon(${lt}% 0, ${100 - lt}% 0, ${100 - lb}% 100%, ${lb}% 100%)`;
 }
 
 export function FunnelSystem() {
   const [active, setActive] = useState(0);
+
+  // larguras dependem da etapa ativa (o painel "consome" parte do afunilamento)
+  const barTop: number[] = [];
+  const barBot: number[] = [];
+  let panelTop = 0;
+  let panelBot = 0;
+  {
+    let w = 100;
+    for (let i = 0; i < STAGES.length; i++) {
+      barTop[i] = +w.toFixed(1);
+      w = +(w - STEP).toFixed(1);
+      barBot[i] = w;
+      if (i === active) {
+        panelTop = w;
+        w = +(w - PANEL_DROP).toFixed(1);
+        panelBot = w;
+      }
+    }
+  }
 
   return (
     <section id="funil" className="scroll-mt-20 border-b border-line bg-surface-1">
@@ -196,9 +216,9 @@ export function FunnelSystem() {
                   >
                     {/* barra-trapézio */}
                     <div
-                      className="relative w-full overflow-hidden rounded-2xl transition-[transform] duration-200 hover:brightness-[1.04] md:rounded-none md:[clip-path:var(--clip)]"
+                      className="relative w-full overflow-hidden rounded-2xl transition-[clip-path] duration-200 hover:brightness-[1.04] md:rounded-none md:[clip-path:var(--clip)]"
                       style={{
-                        "--clip": clipFor(i),
+                        "--clip": clipFor(barTop[i], barBot[i]),
                         background: `linear-gradient(180deg, ${color} 0%, ${color}f2 58%, ${color}d6 100%)`,
                       } as CSSProperties}
                     >
@@ -240,10 +260,28 @@ export function FunnelSystem() {
                     </div>
                   </div>
 
-                  {/* painel da etapa ativa — abre logo abaixo da barra */}
+                  {/* painel-trapézio da etapa ativa — continua o afunilamento */}
                   {isActive && (
-                    <div className="w-full md:max-w-[92%]">
-                      <div className="animate-rise mt-2 rounded-2xl border border-line bg-surface-0/95 p-4 backdrop-blur-sm md:mt-1.5">
+                    <div
+                      className="relative w-full overflow-hidden rounded-2xl bg-surface-0/95 backdrop-blur-sm transition-[clip-path] duration-200 md:rounded-none md:[clip-path:var(--clip)]"
+                      style={{
+                        "--clip": clipFor(panelTop, panelBot),
+                        filter: "drop-shadow(0 12px 22px rgba(0,0,0,0.5))",
+                      } as CSSProperties}
+                    >
+                      {/* borda neon de topo, acompanhando a etapa */}
+                      <div
+                        aria-hidden
+                        className="pointer-events-none absolute inset-0"
+                        style={{
+                          background: `linear-gradient(180deg, ${color}38 0%, transparent 14%)`,
+                        }}
+                      />
+                      {/* conteúdo centrado na largura da BASE do trapézio (nunca corta) */}
+                      <div
+                        className="animate-rise @container mx-auto p-4"
+                        style={{ width: `${panelBot}%` } as CSSProperties}
+                      >
                         <div className="flex items-baseline gap-2.5">
                           <span className="num text-base text-neon">{s.n}</span>
                           <h3 className="text-[15px] font-semibold tracking-tight text-ink">{s.title}</h3>
@@ -252,7 +290,7 @@ export function FunnelSystem() {
                           → <span className="text-ink">{s.outcome}</span>
                         </p>
 
-                        <div className="mt-3.5 grid gap-2.5 sm:grid-cols-2">
+                        <div className="mt-3.5 grid grid-cols-1 gap-2.5 @md:grid-cols-2">
                           {s.capabilities.map((c) => (
                             <article key={c.title} className="rounded-lg border border-line bg-surface-2 p-3">
                               <c.icon className="size-4 text-neon" aria-hidden />
@@ -264,7 +302,7 @@ export function FunnelSystem() {
 
                         {s.fraud && (
                           <div className="mt-2.5 rounded-lg border border-line-strong bg-surface-2 p-3.5">
-                            <div className="grid gap-4 md:grid-cols-2 md:items-center">
+                            <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2 @lg:items-center">
                               <div>
                                 <p className="microlabel mb-1.5 text-loss">Quanto do seu ROAS é mentira?</p>
                                 <p className="text-[11px] leading-relaxed text-ink-mute">
