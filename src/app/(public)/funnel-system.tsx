@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -139,38 +139,41 @@ const STAGES: Stage[] = [
 
 /* gradiente do funil: verde neon (topo) → ciano (fundo) */
 const COLORS = ["#00FF55", "#00EFA0", "#00DED6", "#23CCEE", "#54B2FF"];
-/* larguras afunilando (% do container) */
-const WIDTHS = [100, 87, 75, 66, 58];
+/* larguras afunilando (% do container) — triângulo invertido */
+const WIDTHS = [100, 83, 66, 49, 33];
 const INK = "#04130a";
 
-/* parede do funil: duas curvas finas ligando a etapa i à i+1 */
-function Wall({ i }: { i: number }) {
-  const a = (100 - WIDTHS[i]) / 2; // borda esquerda da etapa de cima (%)
-  const b = (100 - WIDTHS[i + 1]) / 2; // borda esquerda da etapa de baixo (%)
-  const c = COLORS[i];
-  const sides: [number, number][] = [
-    [a, b],
-    [100 - a, 100 - b],
-  ];
+/* parede do funil: lados diagonais + corpo preenchido entre duas etapas */
+function Wall({ wTop, wBot, color }: { wTop: number; wBot: number; color: string }) {
+  const a = (100 - wTop) / 2; // borda esquerda do topo (%)
+  const b = (100 - wBot) / 2; // borda esquerda da base (%)
   return (
-    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden className="-my-px h-5 w-full">
-      {sides.map(([x1, x2], k) => (
-        <path
-          key={k}
-          d={`M ${x1} 0 Q ${x1 + (x1 < 50 ? -2 : 2)} 55 ${x2} 100`}
-          fill="none"
-          stroke={c}
-          strokeWidth={1.4}
-          vectorEffect="non-scaling-stroke"
-          style={{ filter: `drop-shadow(0 0 3px ${c})`, opacity: 0.5 }}
-        />
-      ))}
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden className="-my-px hidden h-4 w-full md:block">
+      <path d={`M ${a} 0 L ${100 - a} 0 L ${100 - b} 100 L ${b} 100 Z`} fill={color} fillOpacity={0.1} />
+      <path
+        d={`M ${a} 0 L ${b} 100`}
+        fill="none"
+        stroke={color}
+        strokeWidth={1.5}
+        vectorEffect="non-scaling-stroke"
+        style={{ filter: `drop-shadow(0 0 3px ${color})`, opacity: 0.65 }}
+      />
+      <path
+        d={`M ${100 - a} 0 L ${100 - b} 100`}
+        fill="none"
+        stroke={color}
+        strokeWidth={1.5}
+        vectorEffect="non-scaling-stroke"
+        style={{ filter: `drop-shadow(0 0 3px ${color})`, opacity: 0.65 }}
+      />
     </svg>
   );
 }
 
 export function FunnelSystem() {
   const [active, setActive] = useState(0);
+  // largura efetiva: a etapa ativa alarga pra caber o painel; o resto afunila
+  const eff = (i: number) => (active === i ? Math.max(WIDTHS[i], 80) : WIDTHS[i]);
 
   return (
     <section id="funil" className="scroll-mt-20 border-b border-line bg-surface-1">
@@ -193,15 +196,15 @@ export function FunnelSystem() {
             className="pointer-events-none absolute inset-x-0 -top-8 mx-auto h-48 w-2/3 rounded-full blur-3xl"
             style={{ background: "radial-gradient(closest-side, rgba(0,255,85,0.18), transparent)" }}
           />
-          <div className="relative flex flex-col items-center">
+          <div className="relative flex flex-col items-center gap-1.5 md:gap-0">
             {STAGES.map((s, i) => {
               const isActive = active === i;
               const color = COLORS[i];
               return (
                 <Fragment key={s.n}>
                   <div
-                    className="w-full transition-[max-width] duration-300 ease-out"
-                    style={{ maxWidth: `${WIDTHS[i]}%` }}
+                    className="w-full max-w-full transition-[max-width] duration-200 ease-out md:max-w-[var(--fw)]"
+                    style={{ "--fw": `${eff(i)}%` } as CSSProperties}
                   >
                     <div
                       className="overflow-hidden rounded-2xl transition-[filter,box-shadow] duration-300 hover:brightness-[1.06]"
@@ -302,7 +305,7 @@ export function FunnelSystem() {
                       )}
                     </div>
                   </div>
-                  {i < STAGES.length - 1 && <Wall i={i} />}
+                  {i < STAGES.length - 1 && <Wall wTop={eff(i)} wBot={eff(i + 1)} color={COLORS[i]} />}
                 </Fragment>
               );
             })}
