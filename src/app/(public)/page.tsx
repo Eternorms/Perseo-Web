@@ -144,11 +144,11 @@ function PainStrip() {
         <Reveal>
           <p className="microlabel text-loss">O modelo quebrado</p>
           <h2 className="mt-3 text-2xl font-semibold tracking-tight">
-            Cinco fornecedores. Zero accountability.
+            Cinco fornecedores. Ninguém dono do resultado.
           </h2>
           <ul className="mt-5 flex flex-col gap-2.5 text-sm leading-relaxed text-ink-mute">
             <li>— Produtora entrega vídeo bonito que não converte.</li>
-            <li>— Gestor de tráfego culpa o criativo. O criativo culpa a oferta.</li>
+            <li>— O tráfego culpa o criativo. O criativo culpa a oferta. E você fica sem resposta.</li>
             <li>— Relatório chega no dia 15, sem dizer o que fazer.</li>
             <li>— E uma fatia do seu orçamento morre em cliques fraudulentos que ninguém mede.</li>
           </ul>
@@ -162,7 +162,7 @@ function PainStrip() {
             <li className="text-ink">→ Pesquisa, criativo, mídia, landing e relatório no mesmo cérebro.</li>
             <li>→ Ciclo de teste contínuo: hipótese, vídeo, dado, próxima iteração.</li>
             <li>→ ROAS auditado contra fraude antes de qualquer decisão.</li>
-            <li>→ Operação alavancada por IA: velocidade de squad, senioridade de partner.</li>
+            <li>→ Velocidade de squad, senioridade de partner. Alavancado por IA.</li>
           </ul>
         </Reveal>
       </div>
