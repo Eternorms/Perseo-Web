@@ -276,14 +276,17 @@ function CreativeRow({ row, first, onAct }: { row: Row; first: boolean; onAct: (
     <span className="flex items-center gap-5">
       <Sparkline points={row.pts} width={88} height={22} color={SPARK[row.status]} />
       {row.action === "scale" ? (
-        <button
-          type="button"
-          onClick={onAct}
-          aria-label={`Escalar ${row.name}`}
-          className="cc-scale-pulse num rounded-sm border border-neon/40 bg-neon/15 px-2 py-0.5 text-[10px] font-medium text-neon transition-colors hover:bg-neon/25"
-        >
-          ESCALAR ↗
-        </button>
+        <span className="flex items-center gap-2">
+          {first && <span className="num text-[10px] text-neon/80">clique →</span>}
+          <button
+            type="button"
+            onClick={onAct}
+            aria-label={`Escalar ${row.name}`}
+            className="cc-scale-pulse num rounded-sm border border-neon/40 bg-neon/15 px-2 py-0.5 text-[10px] font-medium text-neon transition-colors hover:bg-neon/25"
+          >
+            ESCALAR ↗
+          </button>
+        </span>
       ) : (
         <span className={cn("num rounded-sm border px-1.5 py-0.5 text-[10px]", tagClass(row.status))}>{row.status}</span>
       )}
@@ -296,7 +299,6 @@ function CreativeRow({ row, first, onAct }: { row: Row; first: boolean; onAct: (
       <span className="flex items-center gap-2 truncate">
         <span className={cn("num truncate text-xs", row.status === "CAINDO" ? "text-loss" : "text-ink-mute")}>{row.name}</span>
         {row.action === "kill" && <span className="num shrink-0 text-[10px] text-loss/80">✕ pausar</span>}
-        {first && <span className="num shrink-0 text-[10px] text-neon/80">← clique</span>}
       </span>
       {right}
     </>
