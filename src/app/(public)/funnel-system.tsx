@@ -143,28 +143,29 @@ const COLORS = ["#00FF55", "#00EFA0", "#00DED6", "#23CCEE", "#54B2FF"];
 const WIDTHS = [100, 84, 68, 53, 40];
 const INK = "#04130a";
 
-/* parede do funil: lados diagonais + corpo preenchido entre duas etapas */
+/* paredes do funil: dois arcos curvos ligando os cantos da etapa i à i+1 */
 function Wall({ wTop, wBot, color }: { wTop: number; wBot: number; color: string }) {
   const a = (100 - wTop) / 2; // borda esquerda do topo (%)
   const b = (100 - wBot) / 2; // borda esquerda da base (%)
+  const bow = 3.5; // curvatura pra fora
+  const st = { filter: `drop-shadow(0 0 4px ${color})`, opacity: 0.78 };
   return (
-    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden className="-my-px hidden h-4 w-full md:block">
-      <path d={`M ${a} 0 L ${100 - a} 0 L ${100 - b} 100 L ${b} 100 Z`} fill={color} fillOpacity={0.1} />
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden className="-my-1 hidden h-6 w-full md:block">
       <path
-        d={`M ${a} 0 L ${b} 100`}
+        d={`M ${a} 0 Q ${a - bow} 50 ${b} 100`}
         fill="none"
         stroke={color}
-        strokeWidth={1.5}
+        strokeWidth={2}
         vectorEffect="non-scaling-stroke"
-        style={{ filter: `drop-shadow(0 0 3px ${color})`, opacity: 0.65 }}
+        style={st}
       />
       <path
-        d={`M ${100 - a} 0 L ${100 - b} 100`}
+        d={`M ${100 - a} 0 Q ${100 - a + bow} 50 ${100 - b} 100`}
         fill="none"
         stroke={color}
-        strokeWidth={1.5}
+        strokeWidth={2}
         vectorEffect="non-scaling-stroke"
-        style={{ filter: `drop-shadow(0 0 3px ${color})`, opacity: 0.65 }}
+        style={st}
       />
     </svg>
   );
@@ -200,34 +201,20 @@ export function FunnelSystem() {
             {STAGES.map((s, i) => {
               const isActive = active === i;
               const color = COLORS[i];
-              const topW = eff(i);
-              const botW = i < STAGES.length - 1 ? eff(i + 1) : Math.round(topW * 0.78);
-              const inset = topW > 0 ? (((topW - botW) / 2) / topW) * 100 : 0;
-              const clip = `polygon(0% 0%, 100% 0%, ${(100 - inset).toFixed(2)}% 100%, ${inset.toFixed(2)}% 100%)`;
               return (
                 <Fragment key={s.n}>
                   <div
                     className="w-full max-w-full transition-[max-width] duration-200 ease-out md:max-w-[var(--fw)]"
-                    style={
-                      {
-                        "--fw": `${topW}%`,
-                        "--clip": clip,
-                        "--px": `calc(0.9rem + ${inset.toFixed(1)}%)`,
-                        filter: isActive ? undefined : `drop-shadow(0 3px 9px ${color}3d)`,
-                      } as CSSProperties
-                    }
+                    style={{ "--fw": `${eff(i)}%` } as CSSProperties}
                   >
                     <div
-                      className={cn(
-                        "overflow-hidden transition-[filter] duration-300 hover:brightness-[1.05]",
-                        isActive ? "rounded-2xl" : "[clip-path:none] md:[clip-path:var(--clip)]",
-                      )}
+                      className="overflow-hidden rounded-2xl transition-[filter,box-shadow] duration-300 hover:brightness-[1.05]"
                       style={{
                         background: `linear-gradient(162deg, ${color} 0%, ${color}d9 52%, ${color}f0 100%)`,
-                        border: isActive ? "1px solid rgba(255,255,255,0.22)" : undefined,
+                        border: "1px solid rgba(255,255,255,0.22)",
                         boxShadow: isActive
-                          ? `0 10px 34px ${color}55, inset 0 1px 0 rgba(255,255,255,0.5)`
-                          : "inset 0 1px 0 rgba(255,255,255,0.4)",
+                          ? `0 8px 30px ${color}55, inset 0 1px 0 rgba(255,255,255,0.5)`
+                          : `0 1px 10px ${color}22, inset 0 1px 0 rgba(255,255,255,0.4)`,
                       }}
                     >
                       <button
@@ -237,10 +224,7 @@ export function FunnelSystem() {
                         onClick={() => setActive(i)}
                         aria-expanded={isActive}
                         aria-label={`Etapa ${s.n}: ${s.title}`}
-                        className={cn(
-                          "flex w-full items-center justify-between gap-3 px-4 py-2.5",
-                          !isActive && "md:[padding-inline:var(--px)]",
-                        )}
+                        className="flex w-full items-center justify-between gap-3 px-4 py-2.5"
                       >
                         <span className="num text-[13px] font-semibold tracking-wide" style={{ color: INK }}>
                           <span style={{ opacity: 0.5 }}>{s.n}</span>
@@ -322,7 +306,7 @@ export function FunnelSystem() {
                       )}
                     </div>
                   </div>
-                  {i === active && i < STAGES.length - 1 && <Wall wTop={eff(i)} wBot={eff(i + 1)} color={COLORS[i]} />}
+                  {i < STAGES.length - 1 && <Wall wTop={eff(i)} wBot={eff(i + 1)} color={COLORS[i]} />}
                 </Fragment>
               );
             })}
