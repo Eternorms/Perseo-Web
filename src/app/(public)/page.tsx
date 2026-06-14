@@ -81,7 +81,7 @@ function Hero() {
           </g>
           <g>
             <circle className="mem-step-dot" style={{ animationDelay: "2.4s" }} cx="135" cy="290" r="2" />
-            <text className="mem-step-label" style={{ animationDelay: "2.4s" }} x="119" y="294" textAnchor="end">ESTRATÉGIA</text>
+            <text className="mem-step-label" style={{ animationDelay: "2.4s" }} x="135" y="312" textAnchor="middle">ESTRATÉGIA</text>
           </g>
           <g>
             <circle className="mem-step-dot" style={{ animationDelay: "4.5s" }} cx="255" cy="150" r="2" />
