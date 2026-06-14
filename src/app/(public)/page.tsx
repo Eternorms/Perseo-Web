@@ -138,10 +138,10 @@ function Hero() {
 /** Ilustração do produto — valores demonstrativos, não dados de cliente. */
 function CommandCenterPreview() {
   const kpis = [
-    { label: "ROAS AJUSTADO", value: "3.18×", delta: "▲ 12,4%", good: true },
-    { label: "CPA", value: "R$ 41,20", delta: "▼ 38,0%", good: true },
-    { label: "HOOK RATE", value: "31,6%", delta: "▲ 4,1%", good: true },
-    { label: "FRAUDE", value: "6,2%", delta: "▼ 2,3%", good: true },
+    { label: "ROAS AJUSTADO", value: "3.40×", delta: "▲ 9,6%", good: true },
+    { label: "CPA", value: "R$ 39,80", delta: "▼ 11,4%", good: true },
+    { label: "HOOK RATE", value: "32,8%", delta: "▲ 4,2%", good: true },
+    { label: "FRAUDE", value: "5,6%", delta: "▼ 1,9%", good: true },
   ];
   return (
     <figure aria-hidden className="mx-auto mt-16 max-w-4xl animate-rise text-left [animation-delay:360ms]">
