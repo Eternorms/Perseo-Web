@@ -237,8 +237,8 @@ export function CommandCenter() {
 
               <div>
                 <p className="num text-[11px] tracking-[0.18em] text-warn">3 CRIATIVOS ESCALADOS</p>
-                <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-ink md:text-[15px]">
-                  É assim que a Perseo opera seu funil: <span className="text-neon">escala o que vende</span>, corta o que drena — toda semana.
+                <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-ink md:text-[15px]">
+                  Você acabou de fazer o que a Perseo faz no seu orçamento toda semana: <span className="text-neon">escalar o que vende</span>, cortar o que drena.
                 </p>
               </div>
 
