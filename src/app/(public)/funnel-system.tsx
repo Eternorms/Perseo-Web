@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -137,53 +137,10 @@ const STAGES: Stage[] = [
 
 export function FunnelSystem() {
   const [active, setActive] = useState(0);
-  const [autoPlaying, setAutoPlaying] = useState(false);
   const stage = STAGES[active];
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const played = useRef(false);
-  const timers = useRef<number[]>([]);
-
-  const clearTimers = () => {
-    timers.current.forEach((t) => window.clearTimeout(t));
-    timers.current = [];
-  };
-
-  // sweep automático 01 → 05 quando a seção entra na viewport (uma vez só)
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el || played.current || typeof IntersectionObserver === "undefined") return;
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((e) => e.isIntersecting)) return;
-        io.disconnect();
-        played.current = true;
-        setAutoPlaying(true);
-        for (let i = 1; i <= STAGES.length - 1; i++) {
-          const t = window.setTimeout(() => {
-            setActive(i);
-            if (i === STAGES.length - 1) setAutoPlaying(false);
-          }, i * 1100);
-          timers.current.push(t);
-        }
-      },
-      { threshold: 0.25 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  useEffect(() => () => clearTimers(), []);
-
-  const selectStage = (i: number) => {
-    clearTimers();
-    played.current = true;
-    setAutoPlaying(false);
-    setActive(i);
-  };
 
   return (
-    <section id="funil" ref={sectionRef} className="scroll-mt-20 border-b border-line bg-surface-1">
+    <section id="funil" className="scroll-mt-20 border-b border-line bg-surface-1">
       <div className="mx-auto w-full max-w-6xl px-5 py-20">
         <Reveal>
           <p className="microlabel">Funil integrado</p>
@@ -209,7 +166,9 @@ export function FunnelSystem() {
               <button
                 key={s.n}
                 type="button"
-                onClick={() => selectStage(i)}
+                onMouseEnter={() => setActive(i)}
+                onFocus={() => setActive(i)}
+                onClick={() => setActive(i)}
                 aria-pressed={active === i}
                 aria-label={`Etapa ${s.n}: ${s.title}`}
                 className="group flex flex-col items-center gap-2"
@@ -258,7 +217,7 @@ export function FunnelSystem() {
               </article>
             ))}
 
-            {stage.fraud && !autoPlaying && (
+            {stage.fraud && (
               <div className="rounded-xl border border-line-strong bg-surface-2 p-6 md:col-span-2">
                 <div className="grid gap-6 md:grid-cols-2 md:items-center">
                   <div>
