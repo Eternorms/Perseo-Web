@@ -140,7 +140,7 @@ const STAGES: Stage[] = [
 /* gradiente do funil: verde neon (topo) → ciano (fundo) */
 const COLORS = ["#00FF55", "#00EFA0", "#00DED6", "#23CCEE", "#54B2FF"];
 /* larguras afunilando (% do container) — triângulo invertido */
-const WIDTHS = [100, 83, 66, 49, 33];
+const WIDTHS = [100, 84, 68, 53, 40];
 const INK = "#04130a";
 
 /* parede do funil: lados diagonais + corpo preenchido entre duas etapas */
@@ -200,20 +200,34 @@ export function FunnelSystem() {
             {STAGES.map((s, i) => {
               const isActive = active === i;
               const color = COLORS[i];
+              const topW = eff(i);
+              const botW = i < STAGES.length - 1 ? eff(i + 1) : Math.round(topW * 0.78);
+              const inset = topW > 0 ? (((topW - botW) / 2) / topW) * 100 : 0;
+              const clip = `polygon(0% 0%, 100% 0%, ${(100 - inset).toFixed(2)}% 100%, ${inset.toFixed(2)}% 100%)`;
               return (
                 <Fragment key={s.n}>
                   <div
                     className="w-full max-w-full transition-[max-width] duration-200 ease-out md:max-w-[var(--fw)]"
-                    style={{ "--fw": `${eff(i)}%` } as CSSProperties}
+                    style={
+                      {
+                        "--fw": `${topW}%`,
+                        "--clip": clip,
+                        "--px": `calc(0.9rem + ${inset.toFixed(1)}%)`,
+                        filter: isActive ? undefined : `drop-shadow(0 3px 9px ${color}3d)`,
+                      } as CSSProperties
+                    }
                   >
                     <div
-                      className="overflow-hidden rounded-2xl transition-[filter,box-shadow] duration-300 hover:brightness-[1.06]"
+                      className={cn(
+                        "overflow-hidden transition-[filter] duration-300 hover:brightness-[1.05]",
+                        isActive ? "rounded-2xl" : "[clip-path:none] md:[clip-path:var(--clip)]",
+                      )}
                       style={{
                         background: `linear-gradient(162deg, ${color} 0%, ${color}d9 52%, ${color}f0 100%)`,
-                        border: "1px solid rgba(255,255,255,0.22)",
+                        border: isActive ? "1px solid rgba(255,255,255,0.22)" : undefined,
                         boxShadow: isActive
                           ? `0 10px 34px ${color}55, inset 0 1px 0 rgba(255,255,255,0.5)`
-                          : `0 2px 12px ${color}24, inset 0 1px 0 rgba(255,255,255,0.4)`,
+                          : "inset 0 1px 0 rgba(255,255,255,0.4)",
                       }}
                     >
                       <button
@@ -223,7 +237,10 @@ export function FunnelSystem() {
                         onClick={() => setActive(i)}
                         aria-expanded={isActive}
                         aria-label={`Etapa ${s.n}: ${s.title}`}
-                        className="flex w-full items-center justify-between gap-3 px-4 py-2.5"
+                        className={cn(
+                          "flex w-full items-center justify-between gap-3 px-4 py-2.5",
+                          !isActive && "md:[padding-inline:var(--px)]",
+                        )}
                       >
                         <span className="num text-[13px] font-semibold tracking-wide" style={{ color: INK }}>
                           <span style={{ opacity: 0.5 }}>{s.n}</span>
@@ -305,7 +322,7 @@ export function FunnelSystem() {
                       )}
                     </div>
                   </div>
-                  {i < STAGES.length - 1 && <Wall wTop={eff(i)} wBot={eff(i + 1)} color={COLORS[i]} />}
+                  {i === active && i < STAGES.length - 1 && <Wall wTop={eff(i)} wBot={eff(i + 1)} color={COLORS[i]} />}
                 </Fragment>
               );
             })}
