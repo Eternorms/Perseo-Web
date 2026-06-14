@@ -203,7 +203,7 @@ export function CommandCenter() {
         )}
 
         {/* área de criativos — reward sobe por cima */}
-        <div className="relative hidden min-h-[170px] md:block">
+        <div className={cn("relative hidden md:block", scene.reward ? "min-h-[250px]" : "min-h-[170px]")}>
           <div className="divide-y divide-line">
             {scene.rows.map((row) => (
               <CreativeRow key={row.id} row={row} first={phase === 0 && row.action === "scale"} onAct={() => act(row.action)} />
@@ -211,7 +211,14 @@ export function CommandCenter() {
           </div>
 
           {scene.reward && (
-            <div className="cc-reward absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-surface-1/95 px-6 text-center backdrop-blur-sm">
+            <div
+              className="cc-reward absolute inset-0 z-10 flex flex-col items-center justify-center gap-3.5 px-6 text-center"
+              style={{
+                background: "radial-gradient(130% 100% at 50% 0%, rgba(255,200,87,0.10), rgba(10,12,16,0.97) 60%)",
+                backdropFilter: "blur(6px)",
+                WebkitBackdropFilter: "blur(6px)",
+              }}
+            >
               <button
                 type="button"
                 onClick={() => setPhase(0)}
@@ -220,11 +227,38 @@ export function CommandCenter() {
               >
                 ✕
               </button>
-              <span className="num text-[11px] tracking-wider text-warn">✓ 3 criativos escalados</span>
-              <p className="max-w-sm text-sm leading-relaxed text-ink md:text-base">
-                É assim que a Perseo opera seu funil: <span className="text-neon">escala o que vende</span>, corta o que drena — toda semana.
-              </p>
-              <Link href="#contato">
+
+              <span
+                className="flex size-11 items-center justify-center rounded-full border border-warn/40 bg-warn/10 text-lg text-warn"
+                style={{ boxShadow: "0 0 22px rgba(255,200,87,0.22)" }}
+              >
+                ✓
+              </span>
+
+              <div>
+                <p className="num text-[11px] tracking-[0.18em] text-warn">3 CRIATIVOS ESCALADOS</p>
+                <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-ink md:text-[15px]">
+                  É assim que a Perseo opera seu funil: <span className="text-neon">escala o que vende</span>, corta o que drena — toda semana.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-1.5">
+                {[
+                  ["UGC-014", "4.31×"],
+                  ["UGC-021", "3.74×"],
+                  ["UGC-031", "3.92×"],
+                ].map(([id, r]) => (
+                  <span
+                    key={id}
+                    className="num inline-flex items-center gap-1.5 rounded-sm border border-warn/30 bg-warn/[0.08] px-2 py-0.5 text-[10px] text-warn"
+                  >
+                    {id}
+                    <span className="text-warn/60">{r}</span>
+                  </span>
+                ))}
+              </div>
+
+              <Link href="#contato" className="mt-1">
                 <Button variant="primary" size="md">
                   Pedir análise gratuita →
                 </Button>
