@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -23,9 +23,9 @@ import { cn } from "@/lib/utils";
 /**
  * Funil integrado — funde Metodologia + Capacidades + Auditoria de fraude
  * num funil visual interativo. Barras empilhadas afunilando (gradiente
- * verde → ciano); passar o mouse / focar / clicar numa etapa a expande com
- * as capacidades + o resultado dela. A etapa 04 carrega a fórmula de ROAS
- * ajustado por fraude. SSR mostra a etapa 01 (fallback estático).
+ * verde → ciano) ligadas por paredes curvas; passar o mouse / focar /
+ * clicar numa etapa a expande com as capacidades + o resultado dela. A
+ * etapa 04 carrega a fórmula de ROAS ajustado por fraude.
  */
 
 interface Capability {
@@ -139,9 +139,35 @@ const STAGES: Stage[] = [
 
 /* gradiente do funil: verde neon (topo) → ciano (fundo) */
 const COLORS = ["#00FF55", "#00EFA0", "#00DED6", "#23CCEE", "#54B2FF"];
-/* larguras afunilando — etapa ativa nunca encolhe abaixo da própria */
-const WIDTHS = ["100%", "87%", "75%", "66%", "58%"];
+/* larguras afunilando (% do container) */
+const WIDTHS = [100, 87, 75, 66, 58];
 const INK = "#04130a";
+
+/* parede do funil: duas curvas finas ligando a etapa i à i+1 */
+function Wall({ i }: { i: number }) {
+  const a = (100 - WIDTHS[i]) / 2; // borda esquerda da etapa de cima (%)
+  const b = (100 - WIDTHS[i + 1]) / 2; // borda esquerda da etapa de baixo (%)
+  const c = COLORS[i];
+  const sides: [number, number][] = [
+    [a, b],
+    [100 - a, 100 - b],
+  ];
+  return (
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden className="-my-px h-5 w-full">
+      {sides.map(([x1, x2], k) => (
+        <path
+          key={k}
+          d={`M ${x1} 0 Q ${x1 + (x1 < 50 ? -2 : 2)} 55 ${x2} 100`}
+          fill="none"
+          stroke={c}
+          strokeWidth={1.4}
+          vectorEffect="non-scaling-stroke"
+          style={{ filter: `drop-shadow(0 0 3px ${c})`, opacity: 0.5 }}
+        />
+      ))}
+    </svg>
+  );
+}
 
 export function FunnelSystem() {
   const [active, setActive] = useState(0);
@@ -164,117 +190,120 @@ export function FunnelSystem() {
           {/* halo neon atrás do topo do funil */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 -top-10 mx-auto h-56 w-3/4 rounded-full blur-3xl"
-            style={{ background: "radial-gradient(closest-side, rgba(0,255,85,0.22), transparent)" }}
+            className="pointer-events-none absolute inset-x-0 -top-8 mx-auto h-48 w-2/3 rounded-full blur-3xl"
+            style={{ background: "radial-gradient(closest-side, rgba(0,255,85,0.18), transparent)" }}
           />
-          <div className="relative flex flex-col items-center gap-2">
+          <div className="relative flex flex-col items-center">
             {STAGES.map((s, i) => {
               const isActive = active === i;
               const color = COLORS[i];
               return (
-                <div
-                  key={s.n}
-                  className="w-full transition-[max-width] duration-300 ease-out"
-                  style={{ maxWidth: WIDTHS[i] }}
-                >
+                <Fragment key={s.n}>
                   <div
-                    className="overflow-hidden rounded-2xl transition-shadow duration-300"
-                    style={{
-                      background: `linear-gradient(180deg, ${color} 0%, ${color}cc 100%)`,
-                      boxShadow: isActive
-                        ? `0 0 36px ${color}66, inset 0 1px 0 rgba(255,255,255,0.3)`
-                        : `0 0 16px ${color}33, inset 0 1px 0 rgba(255,255,255,0.25)`,
-                    }}
+                    className="w-full transition-[max-width] duration-300 ease-out"
+                    style={{ maxWidth: `${WIDTHS[i]}%` }}
                   >
-                    <button
-                      type="button"
-                      onMouseEnter={() => setActive(i)}
-                      onFocus={() => setActive(i)}
-                      onClick={() => setActive(i)}
-                      aria-expanded={isActive}
-                      aria-label={`Etapa ${s.n}: ${s.title}`}
-                      className="flex w-full items-center justify-between gap-3 px-4 py-3"
+                    <div
+                      className="overflow-hidden rounded-2xl transition-[filter,box-shadow] duration-300 hover:brightness-[1.06]"
+                      style={{
+                        background: `linear-gradient(162deg, ${color} 0%, ${color}d9 52%, ${color}f0 100%)`,
+                        border: "1px solid rgba(255,255,255,0.22)",
+                        boxShadow: isActive
+                          ? `0 10px 34px ${color}55, inset 0 1px 0 rgba(255,255,255,0.5)`
+                          : `0 2px 12px ${color}24, inset 0 1px 0 rgba(255,255,255,0.4)`,
+                      }}
                     >
-                      <span className="num text-sm font-semibold tracking-wide" style={{ color: INK }}>
-                        <span style={{ opacity: 0.55 }}>{s.n}</span>
-                        <span className="mx-2" style={{ opacity: 0.3 }}>
-                          |
-                        </span>
-                        {s.short}
-                      </span>
-                      <span
-                        className="flex size-6 shrink-0 items-center justify-center rounded-full"
-                        style={{ background: "rgba(0,0,0,0.18)" }}
+                      <button
+                        type="button"
+                        onMouseEnter={() => setActive(i)}
+                        onFocus={() => setActive(i)}
+                        onClick={() => setActive(i)}
+                        aria-expanded={isActive}
+                        aria-label={`Etapa ${s.n}: ${s.title}`}
+                        className="flex w-full items-center justify-between gap-3 px-4 py-2.5"
                       >
-                        <Plus
-                          className={cn("size-3.5 transition-transform duration-300", isActive && "rotate-45")}
-                          style={{ color: INK }}
-                        />
-                      </span>
-                    </button>
+                        <span className="num text-[13px] font-semibold tracking-wide" style={{ color: INK }}>
+                          <span style={{ opacity: 0.5 }}>{s.n}</span>
+                          <span className="mx-2" style={{ opacity: 0.28 }}>
+                            |
+                          </span>
+                          {s.short}
+                        </span>
+                        <span
+                          className="flex size-5 shrink-0 items-center justify-center rounded-full"
+                          style={{ background: "rgba(0,0,0,0.16)" }}
+                        >
+                          <Plus
+                            className={cn("size-3 transition-transform duration-300", isActive && "rotate-45")}
+                            style={{ color: INK }}
+                          />
+                        </span>
+                      </button>
 
-                    {isActive && (
-                      <div className="px-1.5 pb-1.5">
-                        <div className="animate-rise rounded-xl bg-surface-0/92 p-4 backdrop-blur-sm">
-                          <div className="flex items-baseline gap-2.5">
-                            <span className="num text-base text-neon">{s.n}</span>
-                            <h3 className="text-base font-semibold tracking-tight text-ink">{s.title}</h3>
-                          </div>
-                          <p className="mt-1.5 text-xs leading-relaxed text-ink-mute">
-                            → <span className="text-ink">{s.outcome}</span>
-                          </p>
+                      {isActive && (
+                        <div className="px-[5px] pb-[5px]">
+                          <div className="animate-rise rounded-[14px] bg-surface-0/95 p-3.5 backdrop-blur-sm">
+                            <div className="flex items-baseline gap-2.5">
+                              <span className="num text-base text-neon">{s.n}</span>
+                              <h3 className="text-[15px] font-semibold tracking-tight text-ink">{s.title}</h3>
+                            </div>
+                            <p className="mt-1.5 text-xs leading-relaxed text-ink-mute">
+                              → <span className="text-ink">{s.outcome}</span>
+                            </p>
 
-                          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                            {s.capabilities.map((c) => (
-                              <article key={c.title} className="rounded-lg border border-line bg-surface-2 p-4">
-                                <c.icon className="size-4 text-neon" aria-hidden />
-                                <h4 className="mt-2.5 text-[13px] font-semibold text-ink">{c.title}</h4>
-                                <p className="mt-1 text-[11px] leading-relaxed text-ink-mute">{c.desc}</p>
-                              </article>
-                            ))}
-                          </div>
+                            <div className="mt-3.5 grid gap-2.5 sm:grid-cols-2">
+                              {s.capabilities.map((c) => (
+                                <article key={c.title} className="rounded-lg border border-line bg-surface-2 p-3">
+                                  <c.icon className="size-4 text-neon" aria-hidden />
+                                  <h4 className="mt-2 text-[13px] font-semibold text-ink">{c.title}</h4>
+                                  <p className="mt-1 text-[11px] leading-relaxed text-ink-mute">{c.desc}</p>
+                                </article>
+                              ))}
+                            </div>
 
-                          {s.fraud && (
-                            <div className="mt-3 rounded-lg border border-line-strong bg-surface-2 p-4">
-                              <div className="grid gap-4 md:grid-cols-2 md:items-center">
-                                <div>
-                                  <p className="microlabel mb-1.5 text-loss">Quanto do seu ROAS é mentira?</p>
-                                  <p className="text-[11px] leading-relaxed text-ink-mute">
-                                    Cliques de bot e tráfego inválido inflam métricas e queimam orçamento em silêncio.
-                                    Todo ROAS que você vê na Perseo já está ajustado pela taxa de fraude medida.
-                                  </p>
-                                  <Link href="#contato" className="mt-3 inline-block">
-                                    <Button variant="outline" size="sm">
-                                      Auditar minha conta →
-                                    </Button>
-                                  </Link>
-                                </div>
-                                <div className="rounded-md border border-line bg-surface-1 p-4">
-                                  <p className="microlabel mb-2">fórmula de decisão</p>
-                                  <p className="num text-sm leading-relaxed text-ink">
-                                    ROAS<sub className="text-ink-faint">real</sub> = ROAS
-                                    <sub className="text-ink-faint">reportado</sub>
-                                  </p>
-                                  <p className="num mt-1 text-sm leading-relaxed text-neon">× (1 − fraud_rate)</p>
-                                  <div className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded border border-line bg-line">
-                                    <div className="bg-surface-2 p-3">
-                                      <p className="microlabel">reportado</p>
-                                      <p className="num mt-0.5 text-xl text-ink">3.40×</p>
-                                    </div>
-                                    <div className="bg-surface-2 p-3">
-                                      <p className="microlabel">com 12% fraude</p>
-                                      <p className="num mt-0.5 text-xl text-loss">2.99×</p>
+                            {s.fraud && (
+                              <div className="mt-2.5 rounded-lg border border-line-strong bg-surface-2 p-3.5">
+                                <div className="grid gap-4 md:grid-cols-2 md:items-center">
+                                  <div>
+                                    <p className="microlabel mb-1.5 text-loss">Quanto do seu ROAS é mentira?</p>
+                                    <p className="text-[11px] leading-relaxed text-ink-mute">
+                                      Cliques de bot e tráfego inválido inflam métricas e queimam orçamento em silêncio.
+                                      Todo ROAS que você vê na Perseo já está ajustado pela taxa de fraude medida.
+                                    </p>
+                                    <Link href="#contato" className="mt-3 inline-block">
+                                      <Button variant="outline" size="sm">
+                                        Auditar minha conta →
+                                      </Button>
+                                    </Link>
+                                  </div>
+                                  <div className="rounded-md border border-line bg-surface-1 p-4">
+                                    <p className="microlabel mb-2">fórmula de decisão</p>
+                                    <p className="num text-sm leading-relaxed text-ink">
+                                      ROAS<sub className="text-ink-faint">real</sub> = ROAS
+                                      <sub className="text-ink-faint">reportado</sub>
+                                    </p>
+                                    <p className="num mt-1 text-sm leading-relaxed text-neon">× (1 − fraud_rate)</p>
+                                    <div className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded border border-line bg-line">
+                                      <div className="bg-surface-2 p-3">
+                                        <p className="microlabel">reportado</p>
+                                        <p className="num mt-0.5 text-xl text-ink">3.40×</p>
+                                      </div>
+                                      <div className="bg-surface-2 p-3">
+                                        <p className="microlabel">com 12% fraude</p>
+                                        <p className="num mt-0.5 text-xl text-loss">2.99×</p>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
+                  {i < STAGES.length - 1 && <Wall i={i} />}
+                </Fragment>
               );
             })}
           </div>
