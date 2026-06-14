@@ -159,7 +159,7 @@ function PainStrip() {
             Um parceiro dono do funil inteiro.
           </h2>
           <ul className="mt-5 flex flex-col gap-2.5 text-sm leading-relaxed text-ink-mute">
-            <li className="text-ink">→ Pesquisa, criativo, mídia, landing e relatório no mesmo cérebro.</li>
+            <li>→ Pesquisa, criativo, mídia, landing e relatório no mesmo cérebro.</li>
             <li>→ Ciclo de teste contínuo: hipótese, vídeo, dado, próxima iteração.</li>
             <li>→ ROAS auditado contra fraude antes de qualquer decisão.</li>
             <li>→ Velocidade de squad, senioridade de partner. Alavancado por IA.</li>
