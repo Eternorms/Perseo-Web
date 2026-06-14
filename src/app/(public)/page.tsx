@@ -106,7 +106,7 @@ function Hero() {
         </svg>
       </div>
       <div className="relative mx-auto w-full max-w-6xl px-5 pb-16 pt-20 text-center md:pt-28">
-        <p className="microlabel animate-rise">Agência de growth full-funnel · D2C & e-commerce</p>
+        <p className="microlabel animate-rise" style={{ color: "var(--color-ink-mute)", fontSize: "0.8rem" }}>Agência de growth full-funnel · D2C & e-commerce</p>
         <h1 className="mx-auto mt-5 max-w-3xl animate-rise text-4xl font-semibold leading-[1.08] tracking-tight [animation-delay:90ms] md:text-6xl">
           Da pesquisa ao ROAS.
           <br />
