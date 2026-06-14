@@ -206,7 +206,7 @@ export function CommandCenter() {
         <div className={cn("relative hidden md:block", scene.reward ? "min-h-[250px]" : "min-h-[170px]")}>
           <div className="divide-y divide-line">
             {scene.rows.map((row) => (
-              <CreativeRow key={row.id} row={row} first={phase === 0 && row.action === "scale"} onAct={() => act(row.action)} />
+              <CreativeRow key={row.id} row={row} onAct={() => act(row.action)} />
             ))}
           </div>
 
@@ -271,22 +271,19 @@ export function CommandCenter() {
   );
 }
 
-function CreativeRow({ row, first, onAct }: { row: Row; first: boolean; onAct: () => void }) {
+function CreativeRow({ row, onAct }: { row: Row; onAct: () => void }) {
   const right = (
     <span className="flex items-center gap-5">
       <Sparkline points={row.pts} width={88} height={22} color={SPARK[row.status]} />
       {row.action === "scale" ? (
-        <span className="flex items-center gap-2">
-          {first && <span className="num text-[10px] text-neon/80">clique →</span>}
-          <button
-            type="button"
-            onClick={onAct}
-            aria-label={`Escalar ${row.name}`}
-            className="cc-scale-pulse num rounded-sm border border-neon/40 bg-neon/15 px-2 py-0.5 text-[10px] font-medium text-neon transition-colors hover:bg-neon/25"
-          >
-            ESCALAR ↗
-          </button>
-        </span>
+        <button
+          type="button"
+          onClick={onAct}
+          aria-label={`Escalar ${row.name}`}
+          className="cc-scale-pulse num rounded-sm border border-neon/40 bg-neon/15 px-2 py-0.5 text-[10px] font-medium text-neon transition-colors hover:bg-neon/25"
+        >
+          ESCALAR ↗
+        </button>
       ) : (
         <span className={cn("num rounded-sm border px-1.5 py-0.5 text-[10px]", tagClass(row.status))}>{row.status}</span>
       )}
