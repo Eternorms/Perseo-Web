@@ -305,11 +305,11 @@ function FunnelBar({
   const d = w && h ? trapPath(w, h, topFrac, botFrac, 10) : "";
   const fid = `f-${stage.n}`;
 
-  // card interno: trapézio de lados PARALELOS ao verde (frame verde uniforme),
-  // cantos RETOS (clip-path polygon).
+  // card interno: trapézio de cantos RETOS (clip-path polygon). Topo recuado
+  // por um frame fino; a BASE encosta na base do verde (acompanha o triângulo).
   const inset = 0.03;
   const cTop = Math.max(0.2, topFrac - inset);
-  const cBot = Math.max(0.18, botFrac - inset);
+  const cBot = Math.max(0.18, botFrac - 0.012);
   const x = (f: number, side: -1 | 1) => (50 + (side * f * 100) / 2).toFixed(2);
   const cardClip = `polygon(${x(cTop, -1)}% 0, ${x(cTop, 1)}% 0, ${x(cBot, 1)}% 100%, ${x(cBot, -1)}% 100%)`;
   const padPct = (((1 - cBot) / 2) * 100).toFixed(2); // recuo p/ conteúdo caber na base
@@ -377,7 +377,7 @@ function FunnelBar({
         </button>
 
         {isActive && (
-          <div className="pb-1.5">
+          <div>
             <div
               className="animate-rise bg-surface-0/96 backdrop-blur-sm"
               style={{
