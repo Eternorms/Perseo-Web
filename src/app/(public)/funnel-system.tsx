@@ -22,11 +22,10 @@ import { cn } from "@/lib/utils";
 
 /**
  * Funil integrado — funde Metodologia + Capacidades + Auditoria de fraude
- * num funil visual interativo. Cada etapa é uma barra em TRAPÉZIO; quando
- * uma etapa abre, o painel de conteúdo também é um TRAPÉZIO que dá
- * continuidade ao afunilamento (as barras abaixo estreitam pra fechar o
- * triângulo sem degrau). Passar o mouse / focar / clicar abre a etapa. A
- * etapa 04 carrega a fórmula de ROAS ajustado por fraude.
+ * num funil visual interativo. Barras arredondadas afunilando (gradiente
+ * verde → ciano) ligadas por paredes curvas; passar o mouse / focar /
+ * clicar numa etapa a expande com as capacidades (carrossel) + o resultado.
+ * A etapa 04 carrega a fórmula de ROAS ajustado por fraude.
  */
 
 interface Capability {
@@ -140,20 +139,36 @@ const STAGES: Stage[] = [
 
 /* gradiente do funil: verde neon (topo) → ciano (fundo) */
 const COLORS = ["#00FF55", "#00EFA0", "#00DED6", "#23CCEE", "#54B2FF"];
+/* larguras afunilando (% do container) — taper suave e largo */
+const WIDTHS = [100, 88, 76, 65, 55];
 const INK = "#04130a";
 
-/* afunilamento: cada barra perde STEP%; o painel aberto perde PANEL_DROP%.
- * Como total = 5×STEP + PANEL_DROP é constante, a silhueta do triângulo é
- * sempre a mesma (100% → 37%); só a "barriga" do painel desliza p/ a etapa
- * ativa, e as barras abaixo estreitam pra fechar o triângulo. */
-const STEP = 9;
-const PANEL_DROP = 18;
-
-/* clip-path de trapézio centrado: topo `top%`, base `bot%` */
-function clipFor(top: number, bot: number) {
-  const lt = (100 - top) / 2;
-  const lb = (100 - bot) / 2;
-  return `polygon(${lt}% 0, ${100 - lt}% 0, ${100 - lb}% 100%, ${lb}% 100%)`;
+/* paredes do funil: dois arcos curvos ligando os cantos da etapa i à i+1 */
+function Wall({ wTop, wBot, color }: { wTop: number; wBot: number; color: string }) {
+  const a = (100 - wTop) / 2; // borda esquerda do topo (%)
+  const b = (100 - wBot) / 2; // borda esquerda da base (%)
+  const bow = 3.5; // curvatura pra fora
+  const st = { filter: `drop-shadow(0 0 5px ${color})`, opacity: 0.85 };
+  return (
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden className="-my-1 hidden h-6 w-full md:block">
+      <path
+        d={`M ${a} 0 Q ${a - bow} 50 ${b} 100`}
+        fill="none"
+        stroke={color}
+        strokeWidth={2.5}
+        vectorEffect="non-scaling-stroke"
+        style={st}
+      />
+      <path
+        d={`M ${100 - a} 0 Q ${100 - a + bow} 50 ${100 - b} 100`}
+        fill="none"
+        stroke={color}
+        strokeWidth={2.5}
+        vectorEffect="non-scaling-stroke"
+        style={st}
+      />
+    </svg>
+  );
 }
 
 /* carrossel horizontal: mostra 1 card por vez e troca sozinho (pausa no hover).
@@ -216,25 +231,6 @@ function CapabilityCarousel({ items, accent }: { items: Capability[]; accent: st
 export function FunnelSystem() {
   const [active, setActive] = useState(0);
 
-  // larguras dependem da etapa ativa (o painel "consome" parte do afunilamento)
-  const barTop: number[] = [];
-  const barBot: number[] = [];
-  let panelTop = 0;
-  let panelBot = 0;
-  {
-    let w = 100;
-    for (let i = 0; i < STAGES.length; i++) {
-      barTop[i] = +w.toFixed(1);
-      w = +(w - STEP).toFixed(1);
-      barBot[i] = w;
-      if (i === active) {
-        panelTop = w;
-        w = +(w - PANEL_DROP).toFixed(1);
-        panelBot = w;
-      }
-    }
-  }
-
   return (
     <section id="funil" className="scroll-mt-20 border-b border-line bg-surface-1">
       <div className="mx-auto w-full max-w-6xl px-5 py-20">
@@ -249,45 +245,33 @@ export function FunnelSystem() {
         </Reveal>
 
         {/* funil interativo */}
-        <div className="relative mx-auto mt-14 max-w-2xl">
+        <div className="relative mx-auto mt-14 max-w-3xl">
           {/* halo neon atrás do topo do funil */}
           <div
             aria-hidden
             className="pointer-events-none absolute inset-x-0 -top-8 mx-auto h-48 w-2/3 rounded-full blur-3xl"
             style={{ background: "radial-gradient(closest-side, rgba(0,255,85,0.18), transparent)" }}
           />
-          <div className="relative flex flex-col items-center gap-2 md:gap-0">
+          <div className="relative flex flex-col items-center gap-1.5 md:gap-0">
             {STAGES.map((s, i) => {
               const isActive = active === i;
               const color = COLORS[i];
               return (
                 <Fragment key={s.n}>
-                  {/* wrapper do glow (drop-shadow segue o trapézio) */}
                   <div
-                    className="w-full transition-[filter] duration-300"
-                    style={{
-                      filter: isActive
-                        ? `drop-shadow(0 0 18px ${color}88)`
-                        : `drop-shadow(0 2px 7px ${color}3a)`,
-                    }}
+                    className="w-full max-w-full transition-[max-width] duration-300 ease-out md:max-w-[var(--fw)]"
+                    style={{ "--fw": `${WIDTHS[i]}%` } as CSSProperties}
                   >
-                    {/* barra-trapézio */}
                     <div
-                      className="relative w-full overflow-hidden rounded-2xl transition-[clip-path] duration-200 hover:brightness-[1.04] md:rounded-none md:[clip-path:var(--clip)]"
+                      className="overflow-hidden rounded-2xl transition-[box-shadow] duration-300 hover:brightness-[1.04]"
                       style={{
-                        "--clip": clipFor(barTop[i], barBot[i]),
-                        background: `linear-gradient(180deg, ${color} 0%, ${color}f2 58%, ${color}d6 100%)`,
-                      } as CSSProperties}
+                        background: `linear-gradient(168deg, ${color} 0%, ${color}e0 55%, ${color}f2 100%)`,
+                        border: "1px solid rgba(255,255,255,0.24)",
+                        boxShadow: isActive
+                          ? `0 10px 34px ${color}55, inset 0 1px 0 rgba(255,255,255,0.55)`
+                          : `0 2px 14px ${color}2e, inset 0 1px 0 rgba(255,255,255,0.42)`,
+                      }}
                     >
-                      {/* brilho de topo (gloss) */}
-                      <div
-                        aria-hidden
-                        className="pointer-events-none absolute inset-0"
-                        style={{
-                          background:
-                            "linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 24%, rgba(255,255,255,0) 56%, rgba(0,0,0,0.1) 100%)",
-                        }}
-                      />
                       <button
                         type="button"
                         onMouseEnter={() => setActive(i)}
@@ -295,7 +279,7 @@ export function FunnelSystem() {
                         onClick={() => setActive(i)}
                         aria-expanded={isActive}
                         aria-label={`Etapa ${s.n}: ${s.title}`}
-                        className="relative flex w-full items-center justify-center gap-2.5 px-4 py-3"
+                        className="flex w-full items-center justify-center gap-2.5 px-4 py-3"
                       >
                         <span className="num text-[13px] font-semibold tracking-wide" style={{ color: INK }}>
                           <span style={{ opacity: 0.5 }}>{s.n}</span>
@@ -314,82 +298,64 @@ export function FunnelSystem() {
                           />
                         </span>
                       </button>
-                    </div>
-                  </div>
 
-                  {/* painel-trapézio da etapa ativa — continua o afunilamento */}
-                  {isActive && (
-                    <div
-                      className="relative w-full overflow-hidden rounded-2xl bg-surface-0/95 backdrop-blur-sm transition-[clip-path] duration-200 md:rounded-none md:[clip-path:var(--clip)]"
-                      style={{
-                        "--clip": clipFor(panelTop, panelBot),
-                        filter: "drop-shadow(0 12px 22px rgba(0,0,0,0.5))",
-                      } as CSSProperties}
-                    >
-                      {/* borda neon de topo, acompanhando a etapa */}
-                      <div
-                        aria-hidden
-                        className="pointer-events-none absolute inset-0"
-                        style={{
-                          background: `linear-gradient(180deg, ${color}38 0%, transparent 14%)`,
-                        }}
-                      />
-                      {/* conteúdo centrado na largura da BASE do trapézio (nunca corta) */}
-                      <div
-                        className="animate-rise @container mx-auto p-4"
-                        style={{ width: `${panelBot}%` } as CSSProperties}
-                      >
-                        <div className="flex items-baseline gap-2.5">
-                          <span className="num text-base text-neon">{s.n}</span>
-                          <h3 className="text-[15px] font-semibold tracking-tight text-ink">{s.title}</h3>
-                        </div>
-                        <p className="mt-1.5 text-xs leading-relaxed text-ink-mute">
-                          → <span className="text-ink">{s.outcome}</span>
-                        </p>
+                      {isActive && (
+                        <div className="px-[6px] pb-[6px]">
+                          <div className="animate-rise rounded-[16px] bg-surface-0/95 p-4 backdrop-blur-sm">
+                            <div className="flex items-baseline gap-2.5">
+                              <span className="num text-base text-neon">{s.n}</span>
+                              <h3 className="text-[15px] font-semibold tracking-tight text-ink">{s.title}</h3>
+                            </div>
+                            <p className="mt-1.5 text-xs leading-relaxed text-ink-mute">
+                              → <span className="text-ink">{s.outcome}</span>
+                            </p>
 
-                        <div className="mt-3.5">
-                          <CapabilityCarousel key={s.n} items={s.capabilities} accent={color} />
-                        </div>
+                            <div className="mt-3.5">
+                              <CapabilityCarousel key={s.n} items={s.capabilities} accent={color} />
+                            </div>
 
-                        {s.fraud && (
-                          <div className="mt-2.5 rounded-lg border border-line-strong bg-surface-2 p-3.5">
-                            <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2 @lg:items-center">
-                              <div>
-                                <p className="microlabel mb-1.5 text-loss">Quanto do seu ROAS é mentira?</p>
-                                <p className="text-[11px] leading-relaxed text-ink-mute">
-                                  Cliques de bot e tráfego inválido inflam métricas e queimam orçamento em silêncio.
-                                  Todo ROAS que você vê na Perseo já está ajustado pela taxa de fraude medida.
-                                </p>
-                                <Link href="#contato" className="mt-3 inline-block">
-                                  <Button variant="outline" size="sm">
-                                    Auditar minha conta →
-                                  </Button>
-                                </Link>
-                              </div>
-                              <div className="rounded-md border border-line bg-surface-1 p-4">
-                                <p className="microlabel mb-2">fórmula de decisão</p>
-                                <p className="num text-sm leading-relaxed text-ink">
-                                  ROAS<sub className="text-ink-faint">real</sub> = ROAS
-                                  <sub className="text-ink-faint">reportado</sub>
-                                </p>
-                                <p className="num mt-1 text-sm leading-relaxed text-neon">× (1 − fraud_rate)</p>
-                                <div className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded border border-line bg-line">
-                                  <div className="bg-surface-2 p-3">
-                                    <p className="microlabel">reportado</p>
-                                    <p className="num mt-0.5 text-xl text-ink">3.40×</p>
+                            {s.fraud && (
+                              <div className="mt-2.5 rounded-lg border border-line-strong bg-surface-2 p-3.5">
+                                <div className="grid gap-4 md:grid-cols-2 md:items-center">
+                                  <div>
+                                    <p className="microlabel mb-1.5 text-loss">Quanto do seu ROAS é mentira?</p>
+                                    <p className="text-[11px] leading-relaxed text-ink-mute">
+                                      Cliques de bot e tráfego inválido inflam métricas e queimam orçamento em silêncio.
+                                      Todo ROAS que você vê na Perseo já está ajustado pela taxa de fraude medida.
+                                    </p>
+                                    <Link href="#contato" className="mt-3 inline-block">
+                                      <Button variant="outline" size="sm">
+                                        Auditar minha conta →
+                                      </Button>
+                                    </Link>
                                   </div>
-                                  <div className="bg-surface-2 p-3">
-                                    <p className="microlabel">com 12% fraude</p>
-                                    <p className="num mt-0.5 text-xl text-loss">2.99×</p>
+                                  <div className="rounded-md border border-line bg-surface-1 p-4">
+                                    <p className="microlabel mb-2">fórmula de decisão</p>
+                                    <p className="num text-sm leading-relaxed text-ink">
+                                      ROAS<sub className="text-ink-faint">real</sub> = ROAS
+                                      <sub className="text-ink-faint">reportado</sub>
+                                    </p>
+                                    <p className="num mt-1 text-sm leading-relaxed text-neon">× (1 − fraud_rate)</p>
+                                    <div className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded border border-line bg-line">
+                                      <div className="bg-surface-2 p-3">
+                                        <p className="microlabel">reportado</p>
+                                        <p className="num mt-0.5 text-xl text-ink">3.40×</p>
+                                      </div>
+                                      <div className="bg-surface-2 p-3">
+                                        <p className="microlabel">com 12% fraude</p>
+                                        <p className="num mt-0.5 text-xl text-loss">2.99×</p>
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-                            </div>
+                            )}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+                  {i < STAGES.length - 1 && <Wall wTop={WIDTHS[i]} wBot={WIDTHS[i + 1]} color={COLORS[i]} />}
                 </Fragment>
               );
             })}
