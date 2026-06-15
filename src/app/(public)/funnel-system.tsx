@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -285,6 +285,29 @@ function CapabilityCarousel({ items, accent }: { items: Capability[]; accent: st
   );
 }
 
+/** card escuro interno: trapézio de cantos ARREDONDADOS (clip-path path medido
+ * em px → sem distorção), deixando uma linha verde fina e uniforme em volta. */
+function DarkCard({ topFrac, botFrac, children }: { topFrac: number; botFrac: number; children: ReactNode }) {
+  const { ref, w, h } = useSize();
+  const clip = w && h ? `path('${trapPath(w, h, topFrac, botFrac, 12)}')` : undefined;
+  const padPct = (((1 - botFrac) / 2) * 100).toFixed(2);
+  return (
+    <div
+      ref={ref}
+      className="animate-rise bg-surface-0/96 backdrop-blur-sm"
+      style={{
+        clipPath: clip,
+        paddingTop: 12,
+        paddingBottom: 12,
+        paddingLeft: `calc(${padPct}% + 14px)`,
+        paddingRight: `calc(${padPct}% + 14px)`,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 /** uma etapa do funil: trapézio SVG (cantos arredondados) + conteúdo */
 function FunnelBar({
   stage,
@@ -305,14 +328,11 @@ function FunnelBar({
   const d = w && h ? trapPath(w, h, topFrac, botFrac, 10) : "";
   const fid = `f-${stage.n}`;
 
-  // card interno: trapézio de cantos RETOS (clip-path polygon). Topo recuado
-  // por um frame fino; a BASE encosta na base do verde (acompanha o triângulo).
-  const inset = 0.03;
+  // card interno: trapézio com lados paralelos ao verde → frame verde fino e
+  // uniforme em volta (~8px). Cantos arredondados (no DarkCard).
+  const inset = 0.022;
   const cTop = Math.max(0.2, topFrac - inset);
-  const cBot = Math.max(0.18, botFrac - 0.012);
-  const x = (f: number, side: -1 | 1) => (50 + (side * f * 100) / 2).toFixed(2);
-  const cardClip = `polygon(${x(cTop, -1)}% 0, ${x(cTop, 1)}% 0, ${x(cBot, 1)}% 100%, ${x(cBot, -1)}% 100%)`;
-  const padPct = (((1 - cBot) / 2) * 100).toFixed(2); // recuo p/ conteúdo caber na base
+  const cBot = Math.max(0.18, botFrac - inset);
 
   return (
     <div
@@ -381,17 +401,8 @@ function FunnelBar({
         </button>
 
         {isActive && (
-          <div>
-            <div
-              className="animate-rise bg-surface-0/96 backdrop-blur-sm"
-              style={{
-                clipPath: cardClip,
-                paddingTop: 11,
-                paddingBottom: 12,
-                paddingLeft: `calc(${padPct}% + 14px)`,
-                paddingRight: `calc(${padPct}% + 14px)`,
-              }}
-            >
+          <div style={{ paddingTop: 8, paddingBottom: 8 }}>
+            <DarkCard topFrac={cTop} botFrac={cBot}>
               <div className="flex items-baseline gap-2.5">
                 <span className="num text-base text-neon">{stage.n}</span>
                 <h3 className="text-[15px] font-semibold tracking-tight text-ink">{stage.title}</h3>
@@ -440,7 +451,7 @@ function FunnelBar({
                   </div>
                 </div>
               )}
-            </div>
+            </DarkCard>
           </div>
         )}
       </div>
