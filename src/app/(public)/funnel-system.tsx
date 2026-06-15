@@ -299,7 +299,7 @@ function DarkCard({
   children: ReactNode;
 }) {
   const { ref, w, h } = useSize();
-  const d = w && h ? trapPath(w, h, topFrac, botFrac, 12) : "";
+  const d = w && h ? trapPath(w, h, topFrac, botFrac, 8) : "";
   const padPct = (((1 - botFrac) / 2) * 100).toFixed(2);
   return (
     <div ref={ref} className="relative">
@@ -347,12 +347,13 @@ function FunnelBar({
   onActivate: () => void;
 }) {
   const { ref, w, h } = useSize();
-  const d = w && h ? trapPath(w, h, topFrac, botFrac, 10) : "";
+  const d = w && h ? trapPath(w, h, topFrac, botFrac, 14) : "";
   const fid = `f-${stage.n}`;
 
-  // card interno: trapézio que quase preenche o verde; a linha verde fina e
-  // uniforme vem do STROKE do DarkCard (não da folga), inclusive nos cantos.
-  const inset = 0.008;
+  // card interno: trapézio recuado por um frame verde visível e uniforme; o
+  // stroke do DarkCard dá a linha limpa. Raio do card < raio do verde p/ não
+  // abrir "cunha" nos cantos.
+  const inset = 0.02;
   const cTop = Math.max(0.2, topFrac - inset);
   const cBot = Math.max(0.18, botFrac - inset);
 
@@ -423,7 +424,7 @@ function FunnelBar({
         </button>
 
         {isActive && (
-          <div style={{ paddingTop: 6, paddingBottom: 4 }}>
+          <div style={{ paddingTop: 7, paddingBottom: 6 }}>
             <DarkCard topFrac={cTop} botFrac={cBot} color={color}>
               <div className="flex items-baseline gap-2.5">
                 <span className="num text-base text-neon">{stage.n}</span>
