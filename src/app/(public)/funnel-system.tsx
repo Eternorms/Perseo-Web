@@ -171,7 +171,21 @@ function CapabilityCarousel({ items, accent }: { items: Capability[]; accent: st
   }, [paused, count]);
 
   return (
-    <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+    <div className="relative" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      {count > 1 && (
+        <div className="absolute right-3 top-3 z-10 flex items-center gap-1.5">
+          {items.map((c, k) => (
+            <button
+              key={c.title}
+              type="button"
+              onClick={() => setIdx(k)}
+              aria-label={`Mostrar card ${k + 1} de ${count}`}
+              className="h-1.5 rounded-full transition-all duration-300"
+              style={{ width: k === idx ? "18px" : "6px", background: k === idx ? accent : "rgba(255,255,255,0.22)" }}
+            />
+          ))}
+        </div>
+      )}
       <div className="overflow-hidden">
         <div
           className="flex transition-transform duration-500 ease-out"
@@ -186,7 +200,7 @@ function CapabilityCarousel({ items, accent }: { items: Capability[]; accent: st
                 >
                   <c.icon className="size-4" style={{ color: accent }} aria-hidden />
                 </span>
-                <div>
+                <div className="pr-12">
                   <h4 className="text-[13px] font-semibold text-ink">{c.title}</h4>
                   <p className="mt-1 text-[11px] leading-relaxed text-ink-mute">{c.desc}</p>
                 </div>
@@ -195,20 +209,6 @@ function CapabilityCarousel({ items, accent }: { items: Capability[]; accent: st
           ))}
         </div>
       </div>
-      {count > 1 && (
-        <div className="mt-3 flex items-center justify-center gap-1.5">
-          {items.map((c, k) => (
-            <button
-              key={c.title}
-              type="button"
-              onClick={() => setIdx(k)}
-              aria-label={`Mostrar card ${k + 1} de ${count}`}
-              className="h-1.5 rounded-full transition-all duration-300"
-              style={{ width: k === idx ? "20px" : "6px", background: k === idx ? accent : "rgba(255,255,255,0.18)" }}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
