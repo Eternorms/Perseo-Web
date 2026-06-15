@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -174,6 +174,33 @@ function useDesktop() {
   return d;
 }
 
+/** parede lateral curva entre duas etapas (ref Gemini): dois colchetes glow */
+function Wall({ color, width }: { color: string; width: number }) {
+  const a = (100 - width) / 2; // x do canto (esquerda)
+  const bow = 2.5;
+  const st = { filter: `drop-shadow(0 0 4px ${color})`, opacity: 0.9 };
+  return (
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden className="hidden h-3.5 w-full md:block">
+      <path
+        d={`M ${a} 0 Q ${a - bow} 50 ${a} 100`}
+        fill="none"
+        stroke={color}
+        strokeWidth={2.5}
+        vectorEffect="non-scaling-stroke"
+        style={st}
+      />
+      <path
+        d={`M ${100 - a} 0 Q ${100 - a + bow} 50 ${100 - a} 100`}
+        fill="none"
+        stroke={color}
+        strokeWidth={2.5}
+        vectorEffect="non-scaling-stroke"
+        style={st}
+      />
+    </svg>
+  );
+}
+
 /** trapézio centrado de cantos arredondados, em coordenadas px */
 function trapPath(w: number, h: number, tf: number, bf: number, r: number) {
   const tl = (w * (1 - tf)) / 2;
@@ -238,7 +265,7 @@ function CapabilityCarousel({ items, accent }: { items: Capability[]; accent: st
         >
           {items.map((c) => (
             <article key={c.title} className="w-full shrink-0">
-              <div className="flex h-full items-start gap-3 rounded-lg border border-line bg-surface-2 p-4">
+              <div className="flex h-full items-start gap-3 rounded-lg border border-line bg-surface-2 p-3">
                 <span
                   className="grid size-9 shrink-0 place-items-center rounded-md"
                   style={{ background: `${accent}1f`, border: `1px solid ${accent}3a` }}
@@ -278,11 +305,11 @@ function FunnelBar({
   const d = w && h ? trapPath(w, h, topFrac, botFrac, 10) : "";
   const fid = `f-${stage.n}`;
 
-  // card interno: trapézio claramente angulado (taper ~0.82) com cantos RETOS
-  // (clip-path polygon). Topo recuado do verde por um frame fino.
+  // card interno: trapézio de lados PARALELOS ao verde (frame verde uniforme),
+  // cantos RETOS (clip-path polygon).
   const inset = 0.03;
-  const cTop = Math.max(0.22, topFrac - inset);
-  const cBot = Math.max(0.2, cTop * 0.82);
+  const cTop = Math.max(0.2, topFrac - inset);
+  const cBot = Math.max(0.18, botFrac - inset);
   const x = (f: number, side: -1 | 1) => (50 + (side * f * 100) / 2).toFixed(2);
   const cardClip = `polygon(${x(cTop, -1)}% 0, ${x(cTop, 1)}% 0, ${x(cBot, 1)}% 100%, ${x(cBot, -1)}% 100%)`;
   const padPct = (((1 - cBot) / 2) * 100).toFixed(2); // recuo p/ conteúdo caber na base
@@ -291,7 +318,7 @@ function FunnelBar({
     <div
       ref={ref}
       className="relative w-full transition-[filter] duration-300"
-      style={{ filter: isActive ? `drop-shadow(0 0 18px ${color}80)` : `drop-shadow(0 2px 8px ${color}38)` }}
+      style={{ filter: isActive ? `drop-shadow(0 0 24px ${color}99)` : `drop-shadow(0 2px 9px ${color}45)` }}
     >
       <svg
         className="pointer-events-none absolute inset-0 h-full w-full"
@@ -302,8 +329,8 @@ function FunnelBar({
         <defs>
           <linearGradient id={`${fid}-fill`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={color} />
-            <stop offset="62%" stopColor={`${color}e6`} />
-            <stop offset="100%" stopColor={`${color}cc`} />
+            <stop offset="52%" stopColor={`${color}e6`} />
+            <stop offset="100%" stopColor={`${color}b0`} />
           </linearGradient>
           <linearGradient id={`${fid}-gloss`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
@@ -329,7 +356,7 @@ function FunnelBar({
           onClick={onActivate}
           aria-expanded={isActive}
           aria-label={`Etapa ${stage.n}: ${stage.title}`}
-          className="flex w-full items-center justify-center gap-2.5 px-4 py-3"
+          className="flex w-full items-center justify-center gap-2.5 px-4 py-2.5"
         >
           <span className="num text-[13px] font-semibold tracking-wide" style={{ color: INK }}>
             <span style={{ opacity: 0.5 }}>{stage.n}</span>
@@ -350,13 +377,13 @@ function FunnelBar({
         </button>
 
         {isActive && (
-          <div className="pb-2">
+          <div className="pb-1.5">
             <div
-              className="animate-rise bg-surface-0/95 backdrop-blur-sm"
+              className="animate-rise bg-surface-0/96 backdrop-blur-sm"
               style={{
                 clipPath: cardClip,
-                paddingTop: 16,
-                paddingBottom: 16,
+                paddingTop: 11,
+                paddingBottom: 12,
                 paddingLeft: `calc(${padPct}% + 14px)`,
                 paddingRight: `calc(${padPct}% + 14px)`,
               }}
@@ -365,16 +392,16 @@ function FunnelBar({
                 <span className="num text-base text-neon">{stage.n}</span>
                 <h3 className="text-[15px] font-semibold tracking-tight text-ink">{stage.title}</h3>
               </div>
-              <p className="mt-1.5 text-xs leading-relaxed text-ink-mute">
+              <p className="mt-1 text-xs leading-relaxed text-ink-mute">
                 → <span className="text-ink">{stage.outcome}</span>
               </p>
 
-              <div className="mt-3.5">
+              <div className="mt-3">
                 <CapabilityCarousel key={stage.n} items={stage.capabilities} accent={color} />
               </div>
 
               {stage.fraud && (
-                <div className="mt-2.5 rounded-lg border border-line-strong bg-surface-2 p-3.5">
+                <div className="mt-2 rounded-lg border border-line-strong bg-surface-2 p-3">
                   <div className="grid gap-4 md:grid-cols-2 md:items-center">
                     <div>
                       <p className="microlabel mb-1.5 text-loss">Quanto do seu ROAS é mentira?</p>
@@ -444,15 +471,17 @@ export function FunnelSystem() {
           />
           <div className="relative flex flex-col gap-2 md:gap-0">
             {STAGES.map((s, i) => (
-              <FunnelBar
-                key={s.n}
-                stage={s}
-                color={COLORS[i]}
-                topFrac={desktop ? TOPW[i] / 100 : 1}
-                botFrac={desktop ? BOTW[i] / 100 : 1}
-                isActive={active === i}
-                onActivate={() => setActive(i)}
-              />
+              <Fragment key={s.n}>
+                <FunnelBar
+                  stage={s}
+                  color={COLORS[i]}
+                  topFrac={desktop ? TOPW[i] / 100 : 1}
+                  botFrac={desktop ? BOTW[i] / 100 : 1}
+                  isActive={active === i}
+                  onActivate={() => setActive(i)}
+                />
+                {i < STAGES.length - 1 && <Wall color={COLORS[i]} width={BOTW[i]} />}
+              </Fragment>
             ))}
           </div>
         </div>
