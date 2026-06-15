@@ -320,8 +320,8 @@ function FunnelBar({
       className="relative w-full transition-[filter] duration-300"
       style={{
         filter: isActive
-          ? `drop-shadow(0 0 20px ${color}82) brightness(1.04)`
-          : `drop-shadow(0 2px 8px ${color}2e) brightness(0.8) saturate(0.95)`,
+          ? `drop-shadow(0 0 22px ${color}8c)`
+          : `drop-shadow(0 2px 9px ${color}3d)`,
       }}
     >
       <svg
