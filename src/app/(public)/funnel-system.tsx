@@ -228,59 +228,28 @@ function trapPath(w: number, h: number, tf: number, bf: number, r: number) {
   ].join(" ");
 }
 
-/* carrossel horizontal: mostra 1 card por vez e troca sozinho (pausa no hover).
- * Permite mais conteúdo por etapa sem aumentar a altura do painel. */
-function CapabilityCarousel({ items, accent }: { items: Capability[]; accent: string }) {
-  const [idx, setIdx] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const count = items.length;
-
-  useEffect(() => {
-    if (paused || count <= 1) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const t = setInterval(() => setIdx((i) => (i + 1) % count), 3600);
-    return () => clearInterval(t);
-  }, [paused, count]);
-
+/* grade de capacidades: mostra os cards lado a lado (2 colunas no desktop),
+ * sem carrossel nem paginador. min-w-0 impede estouro do texto. */
+function CapabilityGrid({ items, accent }: { items: Capability[]; accent: string }) {
   return (
-    <div className="relative" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      {count > 1 && (
-        <div className="absolute right-3 top-3 z-10 flex items-center gap-1.5">
-          {items.map((c, k) => (
-            <button
-              key={c.title}
-              type="button"
-              onClick={() => setIdx(k)}
-              aria-label={`Mostrar card ${k + 1} de ${count}`}
-              className="h-1.5 rounded-full transition-all duration-300"
-              style={{ width: k === idx ? "18px" : "6px", background: k === idx ? accent : "rgba(255,255,255,0.22)" }}
-            />
-          ))}
-        </div>
-      )}
-      <div className="overflow-hidden">
-        <div
-          className="flex transition-transform duration-500 ease-out"
-          style={{ transform: `translateX(-${idx * 100}%)` }}
+    <div className="grid gap-2.5 sm:grid-cols-2">
+      {items.map((c) => (
+        <article
+          key={c.title}
+          className="flex min-w-0 items-start gap-3 rounded-lg border border-line bg-surface-2 p-3"
         >
-          {items.map((c) => (
-            <article key={c.title} className="w-full shrink-0">
-              <div className="flex h-full items-start gap-3 rounded-lg border border-line bg-surface-2 p-3">
-                <span
-                  className="grid size-9 shrink-0 place-items-center rounded-md"
-                  style={{ background: `${accent}1f`, border: `1px solid ${accent}3a` }}
-                >
-                  <c.icon className="size-4" style={{ color: accent }} aria-hidden />
-                </span>
-                <div className="pr-12">
-                  <h4 className="text-[13px] font-semibold text-ink">{c.title}</h4>
-                  <p className="mt-1 text-[11px] leading-relaxed text-ink-mute">{c.desc}</p>
-                </div>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
+          <span
+            className="grid size-9 shrink-0 place-items-center rounded-md"
+            style={{ background: `${accent}1f`, border: `1px solid ${accent}3a` }}
+          >
+            <c.icon className="size-4" style={{ color: accent }} aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <h4 className="text-[13px] font-semibold text-ink">{c.title}</h4>
+            <p className="mt-1 text-[11px] leading-relaxed text-ink-mute">{c.desc}</p>
+          </div>
+        </article>
+      ))}
     </div>
   );
 }
@@ -320,8 +289,8 @@ function DarkCard({
         style={{
           paddingTop: 13,
           paddingBottom: 13,
-          paddingLeft: `calc(${padPct}% + 14px)`,
-          paddingRight: `calc(${padPct}% + 14px)`,
+          paddingLeft: `calc(${padPct}% + 6px)`,
+          paddingRight: `calc(${padPct}% + 6px)`,
         }}
       >
         {children}
@@ -353,7 +322,7 @@ function FunnelBar({
   // card interno: trapézio recuado por um frame verde visível e uniforme; o
   // stroke do DarkCard dá a linha limpa. Raio do card < raio do verde p/ não
   // abrir "cunha" nos cantos.
-  const inset = 0.02;
+  const inset = 0.014;
   const cTop = Math.max(0.2, topFrac - inset);
   const cBot = Math.max(0.18, botFrac - inset);
 
@@ -424,7 +393,7 @@ function FunnelBar({
         </button>
 
         {isActive && (
-          <div style={{ paddingTop: 7, paddingBottom: 6 }}>
+          <div style={{ paddingTop: 7, paddingBottom: 2 }}>
             <DarkCard topFrac={cTop} botFrac={cBot} color={color}>
               <div className="flex items-baseline gap-2.5">
                 <span className="num text-base text-neon">{stage.n}</span>
@@ -435,7 +404,7 @@ function FunnelBar({
               </p>
 
               <div className="mt-3">
-                <CapabilityCarousel key={stage.n} items={stage.capabilities} accent={color} />
+                <CapabilityGrid items={stage.capabilities} accent={color} />
               </div>
 
               {stage.fraud && (
