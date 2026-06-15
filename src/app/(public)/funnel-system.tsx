@@ -278,11 +278,11 @@ function FunnelBar({
   const d = w && h ? trapPath(w, h, topFrac, botFrac, 10) : "";
   const fid = `f-${stage.n}`;
 
-  // card interno: trapézio de lados PARALELOS ao verde, recuado por um frame
-  // constante, com cantos RETOS (clip-path polygon)
+  // card interno: trapézio claramente angulado (taper ~0.82) com cantos RETOS
+  // (clip-path polygon). Topo recuado do verde por um frame fino.
   const inset = 0.03;
-  const cTop = Math.max(0.2, topFrac - inset);
-  const cBot = Math.max(0.18, botFrac - inset);
+  const cTop = Math.max(0.22, topFrac - inset);
+  const cBot = Math.max(0.2, cTop * 0.82);
   const x = (f: number, side: -1 | 1) => (50 + (side * f * 100) / 2).toFixed(2);
   const cardClip = `polygon(${x(cTop, -1)}% 0, ${x(cTop, 1)}% 0, ${x(cBot, 1)}% 100%, ${x(cBot, -1)}% 100%)`;
   const padPct = (((1 - cBot) / 2) * 100).toFixed(2); // recuo p/ conteúdo caber na base
