@@ -264,7 +264,6 @@ function FunnelBar({
   color,
   topFrac,
   botFrac,
-  contentPct,
   isActive,
   onActivate,
 }: {
@@ -272,13 +271,21 @@ function FunnelBar({
   color: string;
   topFrac: number;
   botFrac: number;
-  contentPct: number;
   isActive: boolean;
   onActivate: () => void;
 }) {
   const { ref, w, h } = useSize();
   const d = w && h ? trapPath(w, h, topFrac, botFrac, 10) : "";
   const fid = `f-${stage.n}`;
+
+  // card interno: trapézio de lados PARALELOS ao verde, recuado por um frame
+  // constante, com cantos RETOS (clip-path polygon)
+  const inset = 0.03;
+  const cTop = Math.max(0.2, topFrac - inset);
+  const cBot = Math.max(0.18, botFrac - inset);
+  const x = (f: number, side: -1 | 1) => (50 + (side * f * 100) / 2).toFixed(2);
+  const cardClip = `polygon(${x(cTop, -1)}% 0, ${x(cTop, 1)}% 0, ${x(cBot, 1)}% 100%, ${x(cBot, -1)}% 100%)`;
+  const padPct = (((1 - cBot) / 2) * 100).toFixed(2); // recuo p/ conteúdo caber na base
 
   return (
     <div
@@ -313,8 +320,8 @@ function FunnelBar({
         )}
       </svg>
 
-      {/* conteúdo centrado na largura da base do trapézio (nunca vaza) */}
-      <div className="relative mx-auto" style={{ width: `${contentPct}%` }}>
+      {/* conteúdo sobre o trapézio */}
+      <div className="relative">
         <button
           type="button"
           onMouseEnter={onActivate}
@@ -344,7 +351,16 @@ function FunnelBar({
 
         {isActive && (
           <div className="pb-2">
-            <div className="animate-rise rounded-[14px] bg-surface-0/95 p-4 backdrop-blur-sm">
+            <div
+              className="animate-rise bg-surface-0/95 backdrop-blur-sm"
+              style={{
+                clipPath: cardClip,
+                paddingTop: 16,
+                paddingBottom: 16,
+                paddingLeft: `calc(${padPct}% + 14px)`,
+                paddingRight: `calc(${padPct}% + 14px)`,
+              }}
+            >
               <div className="flex items-baseline gap-2.5">
                 <span className="num text-base text-neon">{stage.n}</span>
                 <h3 className="text-[15px] font-semibold tracking-tight text-ink">{stage.title}</h3>
@@ -434,7 +450,6 @@ export function FunnelSystem() {
                 color={COLORS[i]}
                 topFrac={desktop ? TOPW[i] / 100 : 1}
                 botFrac={desktop ? BOTW[i] / 100 : 1}
-                contentPct={desktop ? BOTW[i] : 100}
                 isActive={active === i}
                 onActivate={() => setActive(i)}
               />
