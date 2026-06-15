@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  Fragment,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-} from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -153,13 +146,11 @@ const TOPW = [100, 88, 76, 65, 55];
 const BOTW = [88, 76, 65, 55, 46];
 const INK = "#04130a";
 
-const useIso = typeof window !== "undefined" ? useLayoutEffect : useEffect;
-
 /** mede o tamanho real (px) do elemento — pra desenhar o SVG sem distorção */
 function useSize() {
   const ref = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
-  useIso(() => {
+  useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const update = () => setSize({ w: el.offsetWidth, h: el.offsetHeight });
