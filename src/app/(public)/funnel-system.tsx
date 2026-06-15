@@ -177,15 +177,15 @@ function useDesktop() {
 /** parede lateral curva entre duas etapas (ref Gemini): dois colchetes glow */
 function Wall({ color, width }: { color: string; width: number }) {
   const a = (100 - width) / 2; // x do canto (esquerda)
-  const bow = 2.5;
-  const st = { filter: `drop-shadow(0 0 4px ${color})`, opacity: 0.9 };
+  const bow = 3;
+  const st = { filter: `drop-shadow(0 0 3px ${color})`, opacity: 0.5 };
   return (
-    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden className="hidden h-3.5 w-full md:block">
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden className="hidden h-3 w-full md:block">
       <path
         d={`M ${a} 0 Q ${a - bow} 50 ${a} 100`}
         fill="none"
         stroke={color}
-        strokeWidth={2.5}
+        strokeWidth={1.5}
         vectorEffect="non-scaling-stroke"
         style={st}
       />
@@ -193,7 +193,7 @@ function Wall({ color, width }: { color: string; width: number }) {
         d={`M ${100 - a} 0 Q ${100 - a + bow} 50 ${100 - a} 100`}
         fill="none"
         stroke={color}
-        strokeWidth={2.5}
+        strokeWidth={1.5}
         vectorEffect="non-scaling-stroke"
         style={st}
       />
@@ -318,7 +318,11 @@ function FunnelBar({
     <div
       ref={ref}
       className="relative w-full transition-[filter] duration-300"
-      style={{ filter: isActive ? `drop-shadow(0 0 24px ${color}99)` : `drop-shadow(0 2px 9px ${color}45)` }}
+      style={{
+        filter: isActive
+          ? `drop-shadow(0 0 20px ${color}82) brightness(1.04)`
+          : `drop-shadow(0 2px 8px ${color}2e) brightness(0.8) saturate(0.95)`,
+      }}
     >
       <svg
         className="pointer-events-none absolute inset-0 h-full w-full"
@@ -329,14 +333,14 @@ function FunnelBar({
         <defs>
           <linearGradient id={`${fid}-fill`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={color} />
-            <stop offset="52%" stopColor={`${color}e6`} />
-            <stop offset="100%" stopColor={`${color}b0`} />
+            <stop offset="44%" stopColor={`${color}f0`} />
+            <stop offset="100%" stopColor={`${color}a6`} />
           </linearGradient>
           <linearGradient id={`${fid}-gloss`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
-            <stop offset="22%" stopColor="#ffffff" stopOpacity="0.08" />
-            <stop offset="55%" stopColor="#ffffff" stopOpacity="0" />
-            <stop offset="100%" stopColor="#000000" stopOpacity="0.12" />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.62" />
+            <stop offset="16%" stopColor="#ffffff" stopOpacity="0.13" />
+            <stop offset="50%" stopColor="#ffffff" stopOpacity="0" />
+            <stop offset="100%" stopColor="#000000" stopOpacity="0.2" />
           </linearGradient>
         </defs>
         {d && (
@@ -356,7 +360,7 @@ function FunnelBar({
           onClick={onActivate}
           aria-expanded={isActive}
           aria-label={`Etapa ${stage.n}: ${stage.title}`}
-          className="flex w-full items-center justify-center gap-2.5 px-4 py-2.5"
+          className="flex w-full items-center justify-center gap-2.5 px-4 py-2"
         >
           <span className="num text-[13px] font-semibold tracking-wide" style={{ color: INK }}>
             <span style={{ opacity: 0.5 }}>{stage.n}</span>
@@ -467,7 +471,7 @@ export function FunnelSystem() {
           <div
             aria-hidden
             className="pointer-events-none absolute inset-x-0 -top-8 mx-auto h-48 w-2/3 rounded-full blur-3xl"
-            style={{ background: "radial-gradient(closest-side, rgba(0,255,85,0.18), transparent)" }}
+            style={{ background: "radial-gradient(closest-side, rgba(0,255,85,0.12), transparent)" }}
           />
           <div className="relative flex flex-col gap-2 md:gap-0">
             {STAGES.map((s, i) => (
