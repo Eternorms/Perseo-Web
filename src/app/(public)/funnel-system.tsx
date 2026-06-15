@@ -287,23 +287,45 @@ function CapabilityCarousel({ items, accent }: { items: Capability[]; accent: st
 
 /** card escuro interno: trapézio de cantos ARREDONDADOS (clip-path path medido
  * em px → sem distorção), deixando uma linha verde fina e uniforme em volta. */
-function DarkCard({ topFrac, botFrac, children }: { topFrac: number; botFrac: number; children: ReactNode }) {
+function DarkCard({
+  topFrac,
+  botFrac,
+  color,
+  children,
+}: {
+  topFrac: number;
+  botFrac: number;
+  color: string;
+  children: ReactNode;
+}) {
   const { ref, w, h } = useSize();
-  const clip = w && h ? `path('${trapPath(w, h, topFrac, botFrac, 12)}')` : undefined;
+  const d = w && h ? trapPath(w, h, topFrac, botFrac, 12) : "";
   const padPct = (((1 - botFrac) / 2) * 100).toFixed(2);
   return (
-    <div
-      ref={ref}
-      className="animate-rise bg-surface-0/96 backdrop-blur-sm"
-      style={{
-        clipPath: clip,
-        paddingTop: 12,
-        paddingBottom: 12,
-        paddingLeft: `calc(${padPct}% + 14px)`,
-        paddingRight: `calc(${padPct}% + 14px)`,
-      }}
-    >
-      {children}
+    <div ref={ref} className="relative">
+      {/* preenchimento escuro + linha verde FINA uniforme (stroke segue os cantos) */}
+      <svg
+        className="pointer-events-none absolute inset-0 h-full w-full"
+        viewBox={`0 0 ${w || 1} ${h || 1}`}
+        preserveAspectRatio="none"
+        aria-hidden
+        style={{ filter: `drop-shadow(0 0 5px ${color}55)`, overflow: "visible" }}
+      >
+        {d && (
+          <path d={d} fill="var(--color-surface-0)" stroke={color} strokeWidth={1.6} vectorEffect="non-scaling-stroke" />
+        )}
+      </svg>
+      <div
+        className="animate-rise relative"
+        style={{
+          paddingTop: 13,
+          paddingBottom: 13,
+          paddingLeft: `calc(${padPct}% + 14px)`,
+          paddingRight: `calc(${padPct}% + 14px)`,
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
@@ -328,9 +350,9 @@ function FunnelBar({
   const d = w && h ? trapPath(w, h, topFrac, botFrac, 10) : "";
   const fid = `f-${stage.n}`;
 
-  // card interno: trapézio com lados paralelos ao verde → frame verde fino e
-  // uniforme em volta (~8px). Cantos arredondados (no DarkCard).
-  const inset = 0.022;
+  // card interno: trapézio que quase preenche o verde; a linha verde fina e
+  // uniforme vem do STROKE do DarkCard (não da folga), inclusive nos cantos.
+  const inset = 0.008;
   const cTop = Math.max(0.2, topFrac - inset);
   const cBot = Math.max(0.18, botFrac - inset);
 
@@ -401,8 +423,8 @@ function FunnelBar({
         </button>
 
         {isActive && (
-          <div style={{ paddingTop: 8, paddingBottom: 8 }}>
-            <DarkCard topFrac={cTop} botFrac={cBot}>
+          <div style={{ paddingTop: 6, paddingBottom: 4 }}>
+            <DarkCard topFrac={cTop} botFrac={cBot} color={color}>
               <div className="flex items-baseline gap-2.5">
                 <span className="num text-base text-neon">{stage.n}</span>
                 <h3 className="text-[15px] font-semibold tracking-tight text-ink">{stage.title}</h3>
