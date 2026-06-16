@@ -5,9 +5,8 @@ import {
   Activity,
   BrainCircuit,
   Clapperboard,
-  FileBarChart,
+  Gauge,
   type LucideIcon,
-  Layers,
   Megaphone,
   Network,
   Plus,
@@ -51,13 +50,13 @@ const STAGES: Stage[] = [
     capabilities: [
       {
         icon: Radar,
-        title: "Espionagem de concorrentes",
-        desc: "Coleta contínua da Meta Ad Library: quais ângulos seus concorrentes escalam e quais abandonam.",
+        title: "Estudo de Concorrentes",
+        desc: "Os ângulos que seus concorrentes escalam e os que já abandonaram.",
       },
       {
         icon: BrainCircuit,
         title: "Roteiros por IA",
-        desc: "Dezenas de variações de ângulo e hook por ciclo, sobre a dor real da audiência.",
+        desc: "Novos ângulos a cada ciclo, sobre o que move o seu público.",
       },
     ],
   },
@@ -69,13 +68,13 @@ const STAGES: Stage[] = [
     capabilities: [
       {
         icon: Clapperboard,
-        title: "Vídeo 9:16 nativo",
-        desc: "UGC com avatares de IA, hooks testáveis em lote.",
+        title: "Vídeo nativo",
+        desc: "Criativos que parecem conteúdo, não propaganda.",
       },
       {
-        icon: Layers,
-        title: "Produção em lote",
-        desc: "Roteiros de direct response e edição AI-first. Volume de teste semanal, não mensal.",
+        icon: Gauge,
+        title: "Velocidade de teste",
+        desc: "Dezenas de hooks e ângulos testados por semana. Um set de filmagem não chega lá no mês.",
       },
     ],
   },
@@ -87,13 +86,13 @@ const STAGES: Stage[] = [
     capabilities: [
       {
         icon: Megaphone,
-        title: "Mídia orgânica & paga",
-        desc: "Publicação que sustenta a promessa do criativo, do anúncio à landing.",
+        title: "Mídia que entrega a promessa",
+        desc: "O que o anúncio promete é o que o cliente encontra.",
       },
       {
         icon: Workflow,
-        title: "Funil integrado",
-        desc: "Lead do anúncio ao agendamento, com follow-up automático e página sem atrito.",
+        title: "Do clique ao agendamento",
+        desc: "Cada lead conduzido até a venda, sem se perder no caminho.",
       },
     ],
   },
@@ -102,17 +101,16 @@ const STAGES: Stage[] = [
     short: "TRACKING",
     title: "Tracking anti-fraude",
     outcome: "Número limpo, não inflado. Você decide pelo ROAS real.",
-    fraud: true,
     capabilities: [
       {
         icon: Activity,
-        title: "Tracking por criativo",
-        desc: "Hook rate, CPA e ROAS de cada vídeo. O vencedor é matemático, não opinião.",
+        title: "Clareza por criativo",
+        desc: "Você enxerga qual criativo gera venda e qual apenas consome verba.",
       },
       {
         icon: ShieldAlert,
-        title: "Auditoria de fraude",
-        desc: "fraud_rate e cliques inválidos medidos por campanha. O ROAS que você vê já é o ajustado.",
+        title: "Investimento protegido",
+        desc: "O tráfego inválido sai da conta antes de qualquer decisão.",
       },
     ],
   },
@@ -120,17 +118,12 @@ const STAGES: Stage[] = [
     n: "05",
     short: "RELATÓRIO",
     title: "Relatório que decide",
-    outcome: "Decisão pra segunda-feira. Não um relatório de vaidade.",
+    outcome: "Decisão pronta na segunda. Não métricas de vaidade.",
     capabilities: [
       {
-        icon: FileBarChart,
-        title: "Relatório automático",
-        desc: "Mensal, por escrito, com a decisão tomada. Não um PDF pra ninguém ler.",
-      },
-      {
         icon: Network,
-        title: "Knowledge Graph",
-        desc: "Cada teste vira memória: dor → ângulo → hook → resultado. Sua marca não recomeça do zero.",
+        title: "Memória da marca",
+        desc: "Cada teste vira aprendizado. A sua marca nunca recomeça do zero.",
       },
     ],
   },
@@ -172,7 +165,8 @@ function useDesktop() {
   return d;
 }
 
-/** parede lateral curva entre duas etapas (ref Gemini): dois colchetes glow */
+/** parede lateral curva entre duas etapas: só o colchete ESQUERDO (o lado
+ * direito carrega o loop de feedback 05→01). */
 function Wall({ color, width }: { color: string; width: number }) {
   const a = (100 - width) / 2; // x do canto (esquerda)
   const bow = 3;
@@ -187,15 +181,76 @@ function Wall({ color, width }: { color: string; width: number }) {
         vectorEffect="non-scaling-stroke"
         style={st}
       />
-      <path
-        d={`M ${100 - a} 0 Q ${100 - a + bow} 50 ${100 - a} 100`}
-        fill="none"
-        stroke={color}
-        strokeWidth={1.5}
-        vectorEffect="non-scaling-stroke"
-        style={st}
-      />
     </svg>
+  );
+}
+
+/** loop de feedback à direita: liga o Relatório (05, base) de volta ao Mercado
+ * (01, topo), provando "cada etapa alimenta a próxima". Medido em px (useSize)
+ * pra não distorcer; rearma quando uma etapa abre/fecha. */
+function FeedbackLoop({ from, to }: { from: string; to: string }) {
+  const { ref, w, h } = useSize();
+  if (!w || !h) return <div ref={ref} className="pointer-events-none absolute inset-0" />;
+
+  const relX = w * 0.74;
+  const relY = h - 14; // direita do Relatório (base)
+  const merX = w + 8; // ponta da seta um pouco fora do Mercado (não toca)
+  const merY = 22; // entrada no Mercado (topo)
+  const off = 88; // afastamento da diagonal (folga p/ o painel aberto não tocar)
+  const dBx = relX + off; // base da diagonal
+  const dTx = merX + off; // topo da diagonal
+  // dobra saindo do Relatório → diagonal paralela ao trapézio (afastada) → dobra no Mercado
+  const d = [
+    `M ${relX} ${relY}`,
+    `L ${dBx} ${relY}`,
+    `L ${dTx} ${merY}`,
+    `L ${merX} ${merY}`,
+  ].join(" ");
+  // seta entrando no Mercado (aponta pra esquerda)
+  const ah = `M ${merX + 9} ${merY - 6} L ${merX} ${merY} L ${merX + 9} ${merY + 6}`;
+  // rótulo ao longo da diagonal
+  const ddx = dTx - dBx;
+  const ddy = merY - relY;
+  const dlen = Math.hypot(ddx, ddy) || 1;
+  const dux = ddx / dlen;
+  const duy = ddy / dlen;
+  const mx = (dBx + dTx) / 2;
+  const my = (relY + merY) / 2;
+  const lx = mx - duy * 13;
+  const ly = my + dux * 13;
+  const ang = (Math.atan2(ddy, ddx) * 180) / Math.PI;
+
+  return (
+    <div ref={ref} className="pointer-events-none absolute inset-0 z-20 hidden md:block">
+      <svg
+        className="absolute inset-0 h-full w-full"
+        viewBox={`0 0 ${w} ${h}`}
+        style={{ overflow: "visible", filter: "drop-shadow(0 0 5px rgba(0,255,85,.3))" }}
+        aria-hidden
+      >
+        <defs>
+          <linearGradient id="loop-grad" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stopColor={from} />
+            <stop offset="100%" stopColor={to} />
+          </linearGradient>
+        </defs>
+        <path d={d} fill="none" stroke="url(#loop-grad)" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" opacity={0.9} />
+        <path d={ah} fill="none" stroke={to} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
+        <text
+          x={lx}
+          y={ly}
+          transform={`rotate(${ang} ${lx} ${ly})`}
+          textAnchor="middle"
+          fontSize="9.5"
+          letterSpacing="0.2em"
+          fill={to}
+          opacity={0.5}
+          style={{ fontFamily: "ui-monospace, 'Geist Mono', monospace" }}
+        >
+          ALIMENTA O MERCADO
+        </text>
+      </svg>
+    </div>
   );
 }
 
@@ -290,13 +345,15 @@ function StageCarousel({ stage, accent }: { stage: Stage; accent: string }) {
           ))}
         </div>
       )}
-      <div className="overflow-hidden">
+      {/* altura fixa: todos os painéis iguais → o funil não muda de tamanho ao
+          trocar a etapa aberta */}
+      <div className="h-[84px] overflow-hidden">
         <div
-          className="flex transition-transform duration-500 ease-out"
+          className="flex h-full transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${idx * 100}%)` }}
         >
           {slides.map((slide, k) => (
-            <div key={k} className="w-full shrink-0">
+            <div key={k} className="h-full w-full shrink-0">
               {slide}
             </div>
           ))}
@@ -505,6 +562,7 @@ export function FunnelSystem() {
                 {i < STAGES.length - 1 && <Wall color={COLORS[i]} width={BOTW[i]} />}
               </Fragment>
             ))}
+            <FeedbackLoop from={COLORS[COLORS.length - 1]} to={COLORS[0]} />
           </div>
         </div>
       </div>

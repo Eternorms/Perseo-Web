@@ -138,7 +138,7 @@ function PainStrip() {
             <li>— Produtora entrega vídeo bonito que não converte.</li>
             <li>— O tráfego culpa o criativo. O criativo culpa a oferta. E você fica sem resposta.</li>
             <li>— Relatório chega no dia 15, sem dizer o que fazer.</li>
-            <li>— E uma fatia do seu orçamento morre em cliques fraudulentos que ninguém mede.</li>
+            <li>— Cerca de 1 em cada 10 cliques é inválido. Uma fatia do orçamento morre em fraude que ninguém mede.</li>
           </ul>
         </Reveal>
         <Reveal delay={130}>
@@ -149,8 +149,8 @@ function PainStrip() {
           <ul className="mt-5 flex flex-col gap-2.5 text-sm leading-relaxed text-ink-mute">
             <li>→ Pesquisa, criativo, mídia, landing e relatório no mesmo cérebro.</li>
             <li>→ Ciclo de teste contínuo: hipótese, vídeo, dado, próxima iteração.</li>
-            <li>→ ROAS auditado contra fraude antes de qualquer decisão.</li>
-            <li>→ Velocidade de squad, senioridade de partner. Alavancado por IA.</li>
+            <li>→ A fraude da sua conta sai do número antes de qualquer decisão. ROAS limpo, não inflado.</li>
+            <li>→ Velocidade de squad, senioridade de partner. Um dono do número, não cinco fornecedores.</li>
           </ul>
         </Reveal>
       </div>
@@ -163,30 +163,30 @@ function PainStrip() {
 const OFFERS = [
   {
     name: "Relatório de Inteligência",
-    price: "US$ 300–500",
+    price: "R$ 990–1.490",
     cadence: "one-off",
-    desc: "Raio-X dos seus 5 maiores concorrentes: ângulos, hooks, ofertas e gaps — + auditoria de fraude da sua conta.",
+    desc: "O raio-X que abre a relação: 5 concorrentes destrinchados (ângulos, hooks, ofertas, gaps) e a fraude da sua conta auditada.",
     bullets: ["Meta Ad Library mapeada", "Auditoria de fraude inclusa", "Plano de ataque por escrito"],
     cta: "Começar pelo raio-X",
     featured: false,
   },
   {
     name: "Engine de Criativos",
-    price: "retainer",
-    cadence: "Starter / Growth",
-    desc: "A máquina de teste: pesquisa viva, roteiros, UGC 9:16 e leitura de hook rate — ciclo semanal.",
-    bullets: ["Lote de criativos por ciclo", "Copy de direct response", "Tracking por criativo"],
+    price: "a partir de R$ 3.500/mês",
+    cadence: "ponto de partida",
+    desc: "A máquina de teste que prova o método em 30 a 60 dias: pesquisa viva, roteiros, UGC 9:16 e leitura de hook rate. Toda semana, não todo mês.",
+    bullets: ["Lote de criativos por ciclo", "Copy de resposta direta", "Tracking por criativo"],
     cta: "Montar minha engine",
-    featured: true,
+    featured: false,
   },
   {
     name: "Full-Funnel Partner",
-    price: "US$ 8–15k/mês",
+    price: "R$ 12–25k/mês",
     cadence: "premium",
-    desc: "Funil completo sob um só cérebro: inteligência, criativo, mídia, landing, agente de IA e relatório.",
-    bullets: ["Tudo da Engine, sem limite de fase", "Landing + funil de leads", "War room mensal de decisão"],
+    desc: "Seu funil inteiro sob um cérebro só: inteligência, criativo, mídia, landing e relatório. Você para de costurar fornecedor e ganha um dono do número.",
+    bullets: ["Tudo da Engine, sem teto de fase", "Landing e funil de leads inclusos", "War room mensal: a decisão do mês por escrito"],
     cta: "Aplicar para vaga",
-    featured: false,
+    featured: true,
   },
 ];
 
@@ -196,7 +196,7 @@ function Offers() {
       <div className="mx-auto w-full max-w-6xl px-5 py-20">
         <p className="microlabel">Escada de ofertas</p>
         <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight">
-          Comece pequeno. Escale quando o número provar.
+          Entre pelo raio-X. Termine com o funil inteiro.
         </h2>
         <div className="mt-12 grid gap-4 md:grid-cols-3">
           {OFFERS.map((o, i) => (
