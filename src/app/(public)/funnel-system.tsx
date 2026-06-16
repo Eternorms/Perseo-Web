@@ -1,7 +1,6 @@
 "use client";
 
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
-import Link from "next/link";
 import {
   Activity,
   BrainCircuit,
@@ -16,7 +15,6 @@ import {
   ShieldAlert,
   Workflow,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Reveal } from "./reveal";
 import { cn } from "@/lib/utils";
 
@@ -54,7 +52,7 @@ const STAGES: Stage[] = [
       {
         icon: Radar,
         title: "Espionagem de concorrentes",
-        desc: "Coleta contínua da Meta Ad Library — quais ângulos seus concorrentes escalam e quais abandonam.",
+        desc: "Coleta contínua da Meta Ad Library: quais ângulos seus concorrentes escalam e quais abandonam.",
       },
       {
         icon: BrainCircuit,
@@ -103,13 +101,13 @@ const STAGES: Stage[] = [
     n: "04",
     short: "TRACKING",
     title: "Tracking anti-fraude",
-    outcome: "Número limpo, não inflado. Decisão sobre ROAS real.",
+    outcome: "Número limpo, não inflado. Você decide pelo ROAS real.",
     fraud: true,
     capabilities: [
       {
         icon: Activity,
         title: "Tracking por criativo",
-        desc: "Hook rate, CPA e ROAS de cada vídeo — o vencedor é matemático, não opinião.",
+        desc: "Hook rate, CPA e ROAS de cada vídeo. O vencedor é matemático, não opinião.",
       },
       {
         icon: ShieldAlert,
@@ -127,7 +125,7 @@ const STAGES: Stage[] = [
       {
         icon: FileBarChart,
         title: "Relatório automático",
-        desc: "Mensal, por escrito, com decisão — não um PDF de vaidade.",
+        desc: "Mensal, por escrito, com a decisão tomada. Não um PDF pra ninguém ler.",
       },
       {
         icon: Network,
@@ -202,7 +200,7 @@ function Wall({ color, width }: { color: string; width: number }) {
 }
 
 /** trapézio centrado de cantos arredondados, em coordenadas px */
-function trapPath(w: number, h: number, tf: number, bf: number, r: number) {
+function trapPath(w: number, h: number, tf: number, bf: number, r: number, rTop = r) {
   const tl = (w * (1 - tf)) / 2;
   const tr = (w * (1 + tf)) / 2;
   const bl = (w * (1 - bf)) / 2;
@@ -213,43 +211,97 @@ function trapPath(w: number, h: number, tf: number, bf: number, r: number) {
   const ll = Math.hypot(tl - bl, h);
   const lux = (tl - bl) / ll;
   const luy = -h / ll; // unidade subindo o lado esquerdo
-  const rr = Math.max(0, Math.min(r, h / 2, (tr - tl) / 2, (br - bl) / 2));
+  const clamp = (v: number) => Math.max(0, Math.min(v, h / 2, (tr - tl) / 2, (br - bl) / 2));
+  const rb = clamp(r); // raio dos cantos de baixo
+  const rt = clamp(rTop); // raio dos cantos de cima (0 = reto)
   return [
-    `M ${tl + rr} 0`,
-    `L ${tr - rr} 0`,
-    `Q ${tr} 0 ${tr + rux * rr} ${ruy * rr}`,
-    `L ${br - rux * rr} ${h - ruy * rr}`,
-    `Q ${br} ${h} ${br - rr} ${h}`,
-    `L ${bl + rr} ${h}`,
-    `Q ${bl} ${h} ${bl + lux * rr} ${h + luy * rr}`,
-    `L ${tl - lux * rr} ${-luy * rr}`,
-    `Q ${tl} 0 ${tl + rr} 0`,
+    `M ${tl + rt} 0`,
+    `L ${tr - rt} 0`,
+    `Q ${tr} 0 ${tr + rux * rt} ${ruy * rt}`,
+    `L ${br - rux * rb} ${h - ruy * rb}`,
+    `Q ${br} ${h} ${br - rb} ${h}`,
+    `L ${bl + rb} ${h}`,
+    `Q ${bl} ${h} ${bl + lux * rb} ${h + luy * rb}`,
+    `L ${tl - lux * rt} ${-luy * rt}`,
+    `Q ${tl} 0 ${tl + rt} 0`,
     "Z",
   ].join(" ");
 }
 
-/* grade de capacidades: mostra os cards lado a lado (2 colunas no desktop),
- * sem carrossel nem paginador. min-w-0 impede estouro do texto. */
-function CapabilityGrid({ items, accent }: { items: Capability[]; accent: string }) {
-  return (
-    <div className="grid gap-2.5 sm:grid-cols-2">
-      {items.map((c) => (
-        <article
-          key={c.title}
-          className="flex min-w-0 items-start gap-3 rounded-lg border border-line bg-surface-2 p-3"
+/* carrossel da etapa: conteúdo em cards que trocam (1 por vez, auto-rotate,
+ * pausa no hover). 1º card = intro (título + outcome); depois as capacidades. */
+function StageCarousel({ stage, accent }: { stage: Stage; accent: string }) {
+  const [idx, setIdx] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  const slides: ReactNode[] = [
+    // intro — só título + frase (sem ícone, sem número)
+    <div
+      key="intro"
+      className="flex h-full flex-col justify-center rounded-lg border border-line bg-surface-2 p-3"
+    >
+      <h4 className="pr-12 text-sm font-semibold text-ink">{stage.title}</h4>
+      <p className="mt-1 pr-12 text-[11px] leading-relaxed text-ink-mute">
+        → <span className="text-ink">{stage.outcome}</span>
+      </p>
+    </div>,
+    // capacidades
+    ...stage.capabilities.map((c) => (
+      <div
+        key={c.title}
+        className="flex h-full items-start gap-3 rounded-lg border border-line bg-surface-2 p-3"
+      >
+        <span
+          className="grid size-9 shrink-0 place-items-center rounded-md"
+          style={{ background: `${accent}1f`, border: `1px solid ${accent}3a` }}
         >
-          <span
-            className="grid size-9 shrink-0 place-items-center rounded-md"
-            style={{ background: `${accent}1f`, border: `1px solid ${accent}3a` }}
-          >
-            <c.icon className="size-4" style={{ color: accent }} aria-hidden />
-          </span>
-          <div className="min-w-0">
-            <h4 className="text-[13px] font-semibold text-ink">{c.title}</h4>
-            <p className="mt-1 text-[11px] leading-relaxed text-ink-mute">{c.desc}</p>
-          </div>
-        </article>
-      ))}
+          <c.icon className="size-4" style={{ color: accent }} aria-hidden />
+        </span>
+        <div className="pr-12">
+          <h4 className="text-[13px] font-semibold text-ink">{c.title}</h4>
+          <p className="mt-1 text-[11px] leading-relaxed text-ink-mute">{c.desc}</p>
+        </div>
+      </div>
+    )),
+  ];
+
+  const count = slides.length;
+
+  useEffect(() => {
+    if (paused || count <= 1) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setInterval(() => setIdx((i) => (i + 1) % count), 3600);
+    return () => clearInterval(t);
+  }, [paused, count]);
+
+  return (
+    <div className="relative" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
+      {count > 1 && (
+        <div className="absolute right-3 top-3 z-10 flex items-center gap-1.5">
+          {slides.map((_, k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setIdx(k)}
+              aria-label={`Mostrar card ${k + 1} de ${count}`}
+              className="h-1.5 rounded-full transition-all duration-300"
+              style={{ width: k === idx ? "18px" : "6px", background: k === idx ? accent : "rgba(255,255,255,0.22)" }}
+            />
+          ))}
+        </div>
+      )}
+      <div className="overflow-hidden">
+        <div
+          className="flex transition-transform duration-500 ease-out"
+          style={{ transform: `translateX(-${idx * 100}%)` }}
+        >
+          {slides.map((slide, k) => (
+            <div key={k} className="w-full shrink-0">
+              {slide}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -268,7 +320,7 @@ function DarkCard({
   children: ReactNode;
 }) {
   const { ref, w, h } = useSize();
-  const d = w && h ? trapPath(w, h, topFrac, botFrac, 8) : "";
+  const d = w && h ? trapPath(w, h, topFrac, botFrac, 8, 0) : "";
   const padPct = (((1 - botFrac) / 2) * 100).toFixed(2);
   return (
     <div ref={ref} className="relative">
@@ -280,9 +332,7 @@ function DarkCard({
         aria-hidden
         style={{ filter: `drop-shadow(0 0 5px ${color}55)`, overflow: "visible" }}
       >
-        {d && (
-          <path d={d} fill="var(--color-surface-0)" stroke={color} strokeWidth={1.6} vectorEffect="non-scaling-stroke" />
-        )}
+        {d && <path d={d} fill="var(--color-surface-0)" />}
       </svg>
       <div
         className="animate-rise relative"
@@ -322,9 +372,19 @@ function FunnelBar({
   // card interno: trapézio recuado por um frame verde visível e uniforme; o
   // stroke do DarkCard dá a linha limpa. Raio do card < raio do verde p/ não
   // abrir "cunha" nos cantos.
-  const inset = 0.014;
-  const cTop = Math.max(0.2, topFrac - inset);
-  const cBot = Math.max(0.18, botFrac - inset);
+  // frame verde ~2px uniforme: o card escuro topo recua mais (verde já afina
+  // sob o botão) e a base recua menos. Calibrado no olho via render.
+  const topInset = 0.029;
+  const botInset = 0.004;
+  const cTop = Math.max(0.2, topFrac - topInset);
+  const cBot = Math.max(0.18, botFrac - botInset);
+
+  // header sempre DENTRO do trapézio (que afina): recua pela largura do trapézio
+  // na altura do texto, com folga da borda. expandida: texto no topo (largo);
+  // retraída: texto no meio do bar curto (mais estreito).
+  const textY = isActive ? 16 : (h || 36) / 2;
+  const fracAtText = h ? topFrac - ((textY + 8) / h) * (topFrac - botFrac) : topFrac;
+  const headPadPct = Math.max(0, ((1 - fracAtText) / 2) * 100).toFixed(2);
 
   return (
     <div
@@ -372,13 +432,15 @@ function FunnelBar({
           onClick={onActivate}
           aria-expanded={isActive}
           aria-label={`Etapa ${stage.n}: ${stage.title}`}
-          className="flex w-full items-center justify-center gap-2.5 px-4 py-2"
+          className="flex w-full items-center justify-between"
+          style={{
+            paddingLeft: `calc(${headPadPct}% + 14px)`,
+            paddingRight: `calc(${headPadPct}% + 14px)`,
+            paddingTop: isActive ? 16 : 8,
+            paddingBottom: 8,
+          }}
         >
           <span className="num text-[13px] font-semibold tracking-wide" style={{ color: INK }}>
-            <span style={{ opacity: 0.5 }}>{stage.n}</span>
-            <span className="mx-2" style={{ opacity: 0.28 }}>
-              |
-            </span>
             {stage.short}
           </span>
           <span
@@ -393,56 +455,9 @@ function FunnelBar({
         </button>
 
         {isActive && (
-          <div style={{ paddingTop: 7, paddingBottom: 2 }}>
+          <div style={{ paddingTop: 7, paddingBottom: 3 }}>
             <DarkCard topFrac={cTop} botFrac={cBot} color={color}>
-              <div className="flex items-baseline gap-2.5">
-                <span className="num text-base text-neon">{stage.n}</span>
-                <h3 className="text-[15px] font-semibold tracking-tight text-ink">{stage.title}</h3>
-              </div>
-              <p className="mt-1 text-xs leading-relaxed text-ink-mute">
-                → <span className="text-ink">{stage.outcome}</span>
-              </p>
-
-              <div className="mt-3">
-                <CapabilityGrid items={stage.capabilities} accent={color} />
-              </div>
-
-              {stage.fraud && (
-                <div className="mt-2 rounded-lg border border-line-strong bg-surface-2 p-3">
-                  <div className="grid gap-4 md:grid-cols-2 md:items-center">
-                    <div>
-                      <p className="microlabel mb-1.5 text-loss">Quanto do seu ROAS é mentira?</p>
-                      <p className="text-[11px] leading-relaxed text-ink-mute">
-                        Cliques de bot e tráfego inválido inflam métricas e queimam orçamento em silêncio. Todo ROAS que
-                        você vê na Perseo já está ajustado pela taxa de fraude medida.
-                      </p>
-                      <Link href="#contato" className="mt-3 inline-block">
-                        <Button variant="outline" size="sm">
-                          Auditar minha conta →
-                        </Button>
-                      </Link>
-                    </div>
-                    <div className="rounded-md border border-line bg-surface-1 p-4">
-                      <p className="microlabel mb-2">fórmula de decisão</p>
-                      <p className="num text-sm leading-relaxed text-ink">
-                        ROAS<sub className="text-ink-faint">real</sub> = ROAS
-                        <sub className="text-ink-faint">reportado</sub>
-                      </p>
-                      <p className="num mt-1 text-sm leading-relaxed text-neon">× (1 − fraud_rate)</p>
-                      <div className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded border border-line bg-line">
-                        <div className="bg-surface-2 p-3">
-                          <p className="microlabel">reportado</p>
-                          <p className="num mt-0.5 text-xl text-ink">3.40×</p>
-                        </div>
-                        <div className="bg-surface-2 p-3">
-                          <p className="microlabel">com 12% fraude</p>
-                          <p className="num mt-0.5 text-xl text-loss">2.99×</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <StageCarousel key={stage.n} stage={stage} accent={color} />
             </DarkCard>
           </div>
         )}
@@ -461,10 +476,10 @@ export function FunnelSystem() {
         <Reveal>
           <p className="microlabel">Funil integrado</p>
           <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight">
-            Full-funnel de verdade: cada fase alimenta a próxima.
+            Full-funnel de verdade: cada etapa alimenta a próxima.
           </h2>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-mute">
-            Um sistema, não cinco fornecedores. Passe por cada etapa para ver o que roda por dentro.
+            Um sistema, não cinco fornecedores. Toque em cada etapa e veja o que roda por dentro.
           </p>
         </Reveal>
 
