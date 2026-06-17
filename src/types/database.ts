@@ -8,6 +8,7 @@ export type WhatsappType = "evolution" | "meta";
 export type UserType = "agency_owner" | "agency_staff" | "client_owner" | "client_staff";
 export type LeadStatus = "new" | "contacted" | "qualified" | "scheduled" | "converted" | "lost";
 export type AppointmentStatus = "scheduled" | "confirmed" | "cancelled" | "completed" | "no_show";
+export type DealStage = "identified" | "warmed" | "conversation" | "audit" | "proposal" | "negotiation" | "won" | "lost";
 export type TaskStatus = "backlog" | "todo" | "in_progress" | "review" | "done";
 export type TaskPriority = "low" | "medium" | "high";
 export type SocialPostStatus = "draft" | "scheduled" | "published" | "failed";
@@ -56,6 +57,27 @@ export type AppUserRow = {
   name: string;
   email: string;
   created_at: string;
+}
+
+export type Deal = {
+  id: string;
+  business_name: string;
+  contact_name: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  niche: string | null;
+  source: string;
+  stage: DealStage;
+  estimated_value: number | null;
+  teardown_url: string | null;
+  notes: string | null;
+  lost_reason: string | null;
+  owner_id: string | null;
+  converted_client_id: string | null;
+  last_contact_at: string | null;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export type LeadRow = {
@@ -219,6 +241,7 @@ export type Database = {
   public: {
     Tables: {
       clients: Def<ClientRow>;
+      deals: Def<Deal>;
       app_users: Def<AppUserRow, [ToClient<"app_users">]>;
       leads: Def<LeadRow, [ToClient<"leads">]>;
       appointments: Def<AppointmentRow, [ToClient<"appointments">, Rel<"appointments_lead_id_fkey", "lead_id", "leads">]>;

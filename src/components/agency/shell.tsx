@@ -9,6 +9,7 @@ import {
   CalendarDays,
   Clapperboard,
   Filter,
+  Handshake,
   Kanban,
   LayoutDashboard,
   Menu as MenuIcon,
@@ -36,6 +37,7 @@ const NAV_GROUPS: Array<{ label: string; items: Array<{ href: string; label: str
       { href: "/agency/kanban", label: "Kanban", icon: Kanban },
       { href: "/agency/schedule", label: "Agenda", icon: CalendarDays },
       { href: "/agency/funis", label: "Funis", icon: Filter },
+      { href: "/agency/pipeline", label: "Pipeline", icon: Handshake },
     ],
   },
   {
