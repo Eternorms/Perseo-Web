@@ -52,6 +52,21 @@ export async function captureLeadAction(_prev: LeadCaptureState, formData: FormD
       },
     });
     if (error) throw error;
+
+    // Notifica automação (n8n) — fire-and-forget, nunca bloqueia nem quebra a resposta ao lead.
+    // No-op se a env var não estiver configurada.
+    if (process.env.N8N_LEAD_WEBHOOK_URL) {
+      fetch(process.env.N8N_LEAD_WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nome: name,
+          email,
+          mensagem: `Marca: ${brand} · WhatsApp: ${whatsapp} · Faturamento: ${revenue}${instagram ? ` · IG: ${instagram}` : ""}`,
+        }),
+      }).catch(() => {});
+    }
+
     return { ok: true, error: null };
   } catch {
     return { ok: false, error: "Não foi possível enviar agora. Tente novamente em instantes." };
